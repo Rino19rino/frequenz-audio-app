@@ -930,6 +930,9 @@ footer {
       <div class="cm-form-title">Neuen Klienten anlegen</div>
       <input class="cm-input" id="cm-name" placeholder="Name *" type="text">
       <input class="cm-input" id="cm-dob" placeholder="Geburtsdatum (TT.MM.JJJJ, optional)" type="text">
+      <input class="cm-input" id="cm-email" placeholder="E-Mail (optional)" type="email">
+      <input class="cm-input" id="cm-tel" placeholder="Telefon (optional)" type="tel">
+      <input class="cm-input" id="cm-address" placeholder="Anschrift (optional)" type="text">
       <input class="cm-input" id="cm-notes" placeholder="Notizen (optional)" type="text">
       <button class="cm-btn-add" onclick="addClient()">+ KLIENT ANLEGEN</button>
     </div>
@@ -1138,9 +1141,9 @@ let activeClientId = localStorage.getItem('rife_active_client') || null;
 const clientStore = {
   getAll() { return JSON.parse(localStorage.getItem('rife_clients') || '[]'); },
   save(c) { localStorage.setItem('rife_clients', JSON.stringify(c)); },
-  add(name, dob, notes) {
+  add(name, dob, email, tel, address, notes) {
     const all = this.getAll();
-    const c = { id: Date.now().toString(), name, dob, notes, sessions: [], created: new Date().toISOString() };
+    const c = { id: Date.now().toString(), name, dob, email, tel, address, notes, sessions: [], created: new Date().toISOString() };
     all.push(c);
     this.save(all);
     return c;
@@ -1434,10 +1437,16 @@ function addClient() {
   const name = document.getElementById('cm-name').value.trim();
   if (!name) { document.getElementById('cm-name').focus(); return; }
   const dob = document.getElementById('cm-dob').value.trim();
+  const email = document.getElementById('cm-email').value.trim();
+  const tel = document.getElementById('cm-tel').value.trim();
+  const address = document.getElementById('cm-address').value.trim();
   const notes = document.getElementById('cm-notes').value.trim();
-  clientStore.add(name, dob, notes);
+  clientStore.add(name, dob, email, tel, address, notes);
   document.getElementById('cm-name').value = '';
   document.getElementById('cm-dob').value = '';
+  document.getElementById('cm-email').value = '';
+  document.getElementById('cm-tel').value = '';
+  document.getElementById('cm-address').value = '';
   document.getElementById('cm-notes').value = '';
   renderClientList();
 }
@@ -1473,7 +1482,9 @@ function renderClientList() {
     <div class="cm-client-item ${activeClientId === c.id ? 'selected' : ''}" onclick="selectClient('${c.id}')">
       <div class="cm-client-info">
         <div class="cm-client-name">${c.name}</div>
-        <div class="cm-client-meta">${c.dob ? 'GEB: ' + c.dob + ' · ' : ''}${c.sessions.length} Sitzung(en)${c.notes ? ' · ' + c.notes : ''}</div>
+        <div class="cm-client-meta">${c.dob ? 'GEB: ' + c.dob + ' · ' : ''}${c.sessions.length} Sitzung(en)</div>
+        <div class="cm-client-meta">${c.email ? '✉ ' + c.email + (c.tel ? '  ·  ' : '') : ''}${c.tel ? '☎ ' + c.tel : ''}</div>
+        <div class="cm-client-meta">${c.address ? '⌂ ' + c.address : ''}${c.notes ? (c.address ? '  ·  ' : '') + c.notes : ''}</div>
       </div>
       <div class="cm-client-actions">
         <button class="cm-cbtn" onclick="event.stopPropagation();showHistory('${c.id}')">HIST</button>
