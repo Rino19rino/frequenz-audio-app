@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rife Frequenz-Player</title>
+<title>Kathrin Frinke – Dr. Rife Frequenztool</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
 <meta name="theme-color" content="#4f7ef7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="FrequenzApp">
+<meta name="apple-mobile-web-app-title" content="Dr. Rife Tool">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
@@ -52,29 +52,53 @@ body::before {
 
 header {
   text-align: center;
-  padding: 36px 20px 20px;
+  padding: 28px 20px 18px;
   position: relative;
   z-index: 1;
+  background: #ffffff;
+  border-bottom: 2px solid var(--border);
+  box-shadow: 0 2px 16px rgba(79,126,247,0.08);
 }
+
+#header-logo-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+#header-logo {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  background: #fff;
+  border-radius: 20px;
+  padding: 6px;
+  box-shadow: 0 6px 24px rgba(249,115,22,0.2), 0 2px 8px rgba(0,0,0,0.08);
+}
+
+#header-text { text-align: center; }
 
 header h1 {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  font-size: clamp(1.5rem, 4vw, 2.6rem);
   font-weight: 900;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   background: linear-gradient(90deg, var(--glow), var(--glow2));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-shadow: none;
   margin-bottom: 6px;
+  line-height: 1.1;
 }
 
 header p {
   color: var(--muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.2em;
+  font-size: 0.82rem;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  font-family: 'Share Tech Mono', monospace;
 }
 
 /* ── VISUALIZER ── */
@@ -105,16 +129,17 @@ canvas#vis {
 
 #np-name {
   font-family: 'Orbitron', monospace;
-  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
   color: var(--glow);
   letter-spacing: 0.08em;
   min-height: 1.4em;
+  font-weight: 700;
 }
 
 #np-freq {
-  font-size: 2rem;
+  font-size: clamp(2.2rem, 6vw, 3rem);
   font-family: 'Orbitron', monospace;
-  font-weight: 700;
+  font-weight: 900;
   color: var(--glow2);
   letter-spacing: 0.05em;
   min-height: 1.2em;
@@ -389,22 +414,22 @@ select#waveform {
 
 .entry-name {
   font-family: 'Orbitron', monospace;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   flex: 1;
   min-width: 0;
 }
 
 .entry-en {
-  font-size: 0.72rem;
+  font-size: 0.8rem;
   color: var(--muted);
   font-style: italic;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 180px;
+  max-width: 200px;
 }
 
 .entry-toggle {
@@ -437,10 +462,10 @@ select#waveform {
   color: #2563eb;
   cursor: pointer;
   font-family: 'Orbitron', monospace;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  padding: 5px 11px;
+  padding: 7px 14px;
   transition: all 0.12s;
 }
 
@@ -737,7 +762,8 @@ footer {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(5,8,16,0.88);
+  background: rgba(30,42,74,0.55);
+  backdrop-filter: blur(4px);
   z-index: 500;
   align-items: flex-start;
   justify-content: center;
@@ -746,12 +772,12 @@ footer {
 }
 #client-modal.open { display: flex; }
 .cm-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: #fff;
+  border-radius: 16px;
   width: 100%;
   max-width: 520px;
-  padding: 24px;
+  padding: 28px;
+  box-shadow: 0 8px 40px rgba(79,126,247,0.18);
 }
 .cm-header {
   display: flex;
@@ -761,9 +787,10 @@ footer {
 }
 .cm-title {
   font-family: 'Orbitron', monospace;
-  font-size: 0.95rem;
+  font-size: 1.1rem;
   color: var(--glow);
   letter-spacing: 0.08em;
+  font-weight: 700;
 }
 .cm-close {
   background: none;
@@ -792,34 +819,35 @@ footer {
 }
 .cm-input {
   width: 100%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
+  background: #f8faff;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
   color: var(--text);
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.85rem;
-  padding: 9px 12px;
+  font-size: 0.95rem;
+  padding: 11px 14px;
   margin-bottom: 10px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 .cm-input:focus { border-color: var(--glow); }
 .cm-input:last-of-type { margin-bottom: 12px; }
 .cm-input::placeholder { color: var(--muted); }
 .cm-btn-add {
   width: 100%;
-  background: rgba(79,126,247,0.1);
-  border: 1px solid var(--glow);
-  border-radius: 6px;
-  color: var(--glow);
+  background: var(--glow);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
   cursor: pointer;
   font-family: 'Orbitron', monospace;
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   letter-spacing: 0.08em;
-  padding: 10px;
+  padding: 13px;
   transition: all 0.15s;
+  box-shadow: 0 3px 12px rgba(79,126,247,0.3);
 }
-.cm-btn-add:hover { background: rgba(79,126,247,0.2); }
+.cm-btn-add:hover { background: #3b6ef0; box-shadow: 0 5px 18px rgba(79,126,247,0.4); }
 .cm-section-title {
   font-size: 0.65rem;
   color: var(--muted);
@@ -863,7 +891,94 @@ footer {
 }
 .cm-cbtn:hover { border-color: var(--glow); color: var(--glow); }
 .cm-cbtn.del:hover { border-color: var(--glow3); color: var(--glow3); }
-.cm-empty { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 20px; }
+.cm-empty { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 24px; }
+
+/* ── HISTORY MODAL ── */
+#history-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(30,42,74,0.55);
+  backdrop-filter: blur(4px);
+  z-index: 600;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px 16px 60px;
+  overflow-y: auto;
+}
+#history-modal.open { display: flex; }
+.hm-box {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 560px;
+  padding: 28px;
+  box-shadow: 0 8px 40px rgba(79,126,247,0.18);
+}
+.hm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  gap: 12px;
+}
+.hm-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--glow);
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.hm-subtitle {
+  font-size: 0.9rem;
+  color: var(--text);
+  font-weight: 600;
+}
+.hm-day { margin-bottom: 20px; }
+.hm-day-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+.hm-session {
+  background: #f8faff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 15px;
+  margin-bottom: 7px;
+}
+.hm-session-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  gap: 8px;
+}
+.hm-session-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  flex: 1;
+}
+.hm-session-time {
+  font-size: 0.75rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.hm-session-detail {
+  font-size: 0.78rem;
+  color: var(--glow);
+  font-family: 'Share Tech Mono', monospace;
+  letter-spacing: 0.05em;
+}
+.hm-empty { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 32px; }
 </style>
 </head>
 <body>
@@ -876,8 +991,13 @@ footer {
 </div>
 
 <header>
-  <h1>⬡ RIFE FREQUENCY PLAYER</h1>
-  <p>Web Audio API · Sinuswelle · Kopfhörer empfohlen</p>
+  <div id="header-logo-wrap">
+    <img src="logo.png" alt="Rife Logo" id="header-logo">
+    <div id="header-text">
+      <h1>DR. RIFE FREQUENZTOOL</h1>
+      <p>Kathrin Frinke &nbsp;·&nbsp; Sinuswelle &nbsp;·&nbsp; Kopfhörer empfohlen</p>
+    </div>
+  </div>
 </header>
 
 <div id="visualizer-wrap">
@@ -959,6 +1079,20 @@ footer {
 </div>
 
 <footer>Kopfhörer empfohlen · Lautstärke schrittweise erhöhen · Web Audio API (kein Server erforderlich)</footer>
+
+<!-- ── HISTORY MODAL ── -->
+<div id="history-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="hm-box">
+    <div class="hm-header">
+      <div>
+        <div class="hm-title">Behandlungshistorie</div>
+        <div class="hm-subtitle" id="hm-client-name"></div>
+      </div>
+      <button class="cm-close" onclick="document.getElementById('history-modal').classList.remove('open')">✕</button>
+    </div>
+    <div id="hm-body"></div>
+  </div>
+</div>
 
 <!-- ── CLIENT MODAL ── -->
 <div id="client-modal" onclick="if(event.target===this)closeClientModal()">
@@ -1191,12 +1325,12 @@ const clientStore = {
   },
   remove(id) { this.save(this.getAll().filter(c => c.id !== id)); },
   get(id) { return this.getAll().find(c => c.id === id); },
-  logSession(clientId, entry, hz) {
+  logSession(clientId, entry, hz, waveform, durationSec) {
     const all = this.getAll().map(c => {
       if (c.id === clientId) {
         c.sessions = c.sessions || [];
-        c.sessions.unshift({ de: entry.de, hz, date: new Date().toISOString() });
-        if (c.sessions.length > 100) c.sessions = c.sessions.slice(0, 100);
+        c.sessions.unshift({ de: entry.de, en: entry.en, hz, waveform: waveform||'sine', durationSec: durationSec||0, date: new Date().toISOString() });
+        if (c.sessions.length > 200) c.sessions = c.sessions.slice(0, 200);
       }
       return c;
     });
@@ -1299,7 +1433,7 @@ function playFreq(hz, entryObj, chipIdx) {
   // Update UI
   document.getElementById('np-name').textContent = entryObj.de;
   document.getElementById('np-en').textContent = entryObj.en;
-  if (activeClientId) clientStore.logSession(activeClientId, entryObj, clamped);
+  if (activeClientId) clientStore.logSession(activeClientId, entryObj, clamped, waveType, duration);
   document.getElementById('np-freq').textContent = clamped % 1 === 0 ? clamped + ' Hz' : clamped.toFixed(1) + ' Hz';
 
   const btn = document.getElementById('btn-play');
@@ -1599,11 +1733,37 @@ function deleteClient(id) {
 }
 function showHistory(id) {
   const c = clientStore.get(id);
-  if (!c || !c.sessions.length) { alert('Noch keine Sitzungen für diesen Klienten.'); return; }
-  const txt = c.sessions.slice(0, 30).map(s =>
-    new Date(s.date).toLocaleDateString('de-DE') + '  –  ' + s.de + '  (' + s.hz + ' Hz)'
-  ).join('\n');
-  alert('SITZUNGSHISTORIE: ' + c.name + '\n\n' + txt);
+  const modal = document.getElementById('history-modal');
+  const title = document.getElementById('hm-client-name');
+  const body = document.getElementById('hm-body');
+  title.textContent = c ? c.name : '';
+  if (!c || !c.sessions.length) {
+    body.innerHTML = '<div class="hm-empty">Noch keine Behandlungen gespeichert.</div>';
+  } else {
+    // Gruppieren nach Datum
+    const byDate = {};
+    c.sessions.forEach(s => {
+      const d = new Date(s.date).toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push(s);
+    });
+    body.innerHTML = Object.entries(byDate).map(([date, sessions]) => `
+      <div class="hm-day">
+        <div class="hm-day-title">${date}</div>
+        ${sessions.map(s => {
+          const dur = s.durationSec >= 60 ? Math.floor(s.durationSec/60)+'m '+( s.durationSec%60?s.durationSec%60+'s':'') : s.durationSec+'s';
+          const time = new Date(s.date).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+          return `<div class="hm-session">
+            <div class="hm-session-top">
+              <span class="hm-session-name">${s.de}</span>
+              <span class="hm-session-time">${time} Uhr</span>
+            </div>
+            <div class="hm-session-detail">${s.hz} Hz &nbsp;·&nbsp; ${s.waveform||'sine'} &nbsp;·&nbsp; ${dur}</div>
+          </div>`;
+        }).join('')}
+      </div>`).join('');
+  }
+  modal.classList.add('open');
 }
 function renderClientList() {
   const all = clientStore.getAll();
