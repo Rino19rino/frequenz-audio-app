@@ -126,6 +126,22 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .ai-match-en{font-size:0.72rem;color:var(--muted);}
 .ai-match-hz{font-size:0.7rem;color:var(--gold);font-family:'Orbitron',monospace;margin-top:3px;}
 .ai-match-reason{font-size:0.72rem;color:var(--text);margin-top:3px;font-style:italic;}
+/* AI Tabs */
+.ai-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px;}
+.ai-tab{flex:1;padding:7px 4px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;color:var(--muted);transition:all 0.15s;}
+.ai-tab.active{color:var(--primary-dk);border-bottom-color:var(--gold);}
+.ai-tab-pane{display:none;}.ai-tab-pane.active{display:block;}
+/* DNA Upload */
+#dna-drop{border:2px dashed var(--border);border-radius:var(--radius);padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--light);}
+#dna-drop:hover,#dna-drop.drag-over{border-color:var(--gold);background:#fffbf3;}
+#dna-drop-icon{font-size:2rem;margin-bottom:6px;}
+#dna-drop-text{font-size:0.8rem;color:var(--muted);}
+#dna-drop-text strong{color:var(--primary-dk);}
+#dna-file-info{margin-top:8px;padding:7px 10px;background:var(--primary-lt);border-radius:var(--radius-sm);font-size:0.78rem;color:var(--primary-dk);display:none;}
+#dna-analyze-btn{margin-top:8px;background:var(--gold);color:#fff;border:none;border-radius:var(--radius);padding:8px 18px;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'Inter',sans-serif;width:100%;}
+#dna-analyze-btn:disabled{background:var(--muted);cursor:not-allowed;}
+#dna-disclaimer{margin-top:8px;font-size:0.68rem;color:var(--muted);line-height:1.5;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);}
+#dna-result{margin-top:10px;}
 
 /* ── CENTER ── */
 #freq-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
@@ -325,21 +341,43 @@ select.pp-sel:focus{border-color:var(--primary);}
     <div id="ai-panel">
       <button id="ai-toggle-btn" onclick="toggleAiPanel()">
         <span class="ai-icon">✦</span>
-        KI-Frequenzassistent – Beschwerden beschreiben
+        KI-Frequenzassistent
         <span class="ai-chevron">▼</span>
       </button>
       <div id="ai-body">
-        <textarea id="ai-symptom" placeholder="Beschreiben Sie die Beschwerden – z.B. chronischer Tinnitus im linken Ohr, Schlafstörungen, Erschöpfung …"></textarea>
-        <div id="ai-actions">
-          <button id="ai-ask-btn" onclick="askAI()">✦ Frequenzen finden</button>
-          <button id="ai-key-toggle" onclick="toggleKeyRow()">API-Key einrichten</button>
-        </div>
+        <!-- API Key Row (shared) -->
         <div id="ai-key-row">
           <input type="password" id="ai-key-input" placeholder="sk-ant-api03-…">
           <button id="ai-key-save" onclick="saveApiKey()">Speichern</button>
         </div>
-        <div id="ai-result">
-          <div id="ai-status"></div>
+        <!-- Tabs -->
+        <div class="ai-tabs">
+          <button class="ai-tab active" onclick="switchAiTab('symptom',this)">✦ Beschwerden</button>
+          <button class="ai-tab" onclick="switchAiTab('dna',this)">🧬 DNA-Analyse</button>
+        </div>
+        <!-- Tab: Beschwerden -->
+        <div class="ai-tab-pane active" id="ai-tab-symptom">
+          <textarea id="ai-symptom" placeholder="Beschreiben Sie die Beschwerden – z.B. chronischer Tinnitus im linken Ohr, Schlafstörungen, Erschöpfung …"></textarea>
+          <div id="ai-actions">
+            <button id="ai-ask-btn" onclick="askAI()">✦ Frequenzen finden</button>
+            <button id="ai-key-toggle" onclick="toggleKeyRow()">API-Key einrichten</button>
+          </div>
+          <div id="ai-result"><div id="ai-status"></div></div>
+        </div>
+        <!-- Tab: DNA -->
+        <div class="ai-tab-pane" id="ai-tab-dna">
+          <div id="dna-drop" onclick="document.getElementById('dna-file-input').click()"
+               ondragover="event.preventDefault();this.classList.add('drag-over')"
+               ondragleave="this.classList.remove('drag-over')"
+               ondrop="handleDnaDrop(event)">
+            <div id="dna-drop-icon">🧬</div>
+            <div id="dna-drop-text"><strong>DNA-Datei hier ablegen</strong> oder klicken<br>PDF · TXT · CSV · VCF</div>
+          </div>
+          <input type="file" id="dna-file-input" accept=".pdf,.txt,.csv,.vcf,.zip" style="display:none" onchange="handleDnaFile(this.files[0])">
+          <div id="dna-file-info"></div>
+          <button id="dna-analyze-btn" onclick="analyzeDNA()" disabled>🧬 DNA analysieren & Frequenzen vorschlagen</button>
+          <div id="dna-disclaimer">⚠ Datenschutz: Die Datei wird ausschließlich über Ihre eigene Claude-API direkt analysiert. Es findet keine Speicherung auf Drittservern statt. Dies ist keine medizinische Diagnose.</div>
+          <div id="dna-result"></div>
         </div>
       </div>
     </div>
@@ -1149,6 +1187,121 @@ document.getElementById('client-modal').onclick=function(e){if(e.target===this)c
 // ════════════════════════════════════
 function toggleAiPanel(){
   document.getElementById('ai-panel').classList.toggle('open');
+}
+function switchAiTab(tab,btn){
+  document.querySelectorAll('.ai-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.ai-tab-pane').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ai-tab-'+tab).classList.add('active');
+}
+
+// ── DNA ──
+let dnaFileData=null;
+function handleDnaDrop(e){
+  e.preventDefault();document.getElementById('dna-drop').classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];if(f)handleDnaFile(f);
+}
+function handleDnaFile(file){
+  if(!file)return;
+  const allowed=['application/pdf','text/plain','text/csv','text/x-vcard'];
+  const ext=file.name.split('.').pop().toLowerCase();
+  const allowedExt=['pdf','txt','csv','vcf'];
+  if(!allowedExt.includes(ext)){alert('Bitte PDF, TXT, CSV oder VCF Datei verwenden.');return;}
+  document.getElementById('dna-file-info').style.display='block';
+  document.getElementById('dna-file-info').textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
+  document.getElementById('dna-result').innerHTML='';
+  if(ext==='pdf'){
+    const reader=new FileReader();
+    reader.onload=e=>{dnaFileData={type:'pdf',base64:e.target.result.split(',')[1],name:file.name};document.getElementById('dna-analyze-btn').disabled=false;};
+    reader.readAsDataURL(file);
+  } else {
+    const reader=new FileReader();
+    reader.onload=e=>{
+      let text=e.target.result;
+      // Für große Dateien (z.B. 23andMe raw data): Metadaten + erste 8000 Zeichen
+      if(text.length>12000){
+        const lines=text.split('\n');
+        const header=lines.filter(l=>l.startsWith('#')).slice(0,30).join('\n');
+        const sample=lines.filter(l=>!l.startsWith('#')).slice(0,200).join('\n');
+        text=header+'\n[...gekürzt, '+lines.length+' Zeilen gesamt...]\n'+sample;
+      }
+      dnaFileData={type:'text',text,name:file.name};
+      document.getElementById('dna-analyze-btn').disabled=false;
+    };
+    reader.readAsText(file);
+  }
+}
+async function analyzeDNA(){
+  const key=localStorage.getItem('rife_ai_key')||'';
+  if(!key){document.getElementById('ai-key-row').classList.add('visible');document.getElementById('dna-result').innerHTML='<div style="color:#c0392b;font-size:0.78rem;">⚠ Bitte zuerst den API-Key einrichten.</div>';return;}
+  if(!dnaFileData){return;}
+  const btn=document.getElementById('dna-analyze-btn');
+  const resultEl=document.getElementById('dna-result');
+  btn.disabled=true;btn.textContent='… wird analysiert';
+  resultEl.innerHTML='<div style="color:var(--muted);font-size:0.78rem;font-style:italic;">🧬 Claude analysiert die DNA-Daten …</div>';
+
+  const entryList=DATA.map(d=>`${d.de} (${d.en})`).join('\n');
+  const systemPrompt=`Du bist ein spezialisierter Berater für komplementäre Therapieansätze mit Schwerpunkt auf Rife-Frequenztherapie.
+Du analysierst genetische Daten oder Berichte und identifizierst mögliche gesundheitliche Prädispositionen oder Schwachstellen.
+Basierend darauf schlägst du passende Rife-Frequenzeinträge als unterstützende komplementäre Maßnahme vor.
+
+WICHTIG:
+- Antworte AUSSCHLIESSLICH mit einem JSON-Array, kein erklärender Text.
+- Format: [{"de":"Exakter Name aus der Liste","reason":"Begründung basierend auf genetischem Befund (max 15 Wörter)","priority":"hoch|mittel|niedrig"}]
+- Maximal 8 Einträge, nach Relevanz sortiert.
+- Nur Einträge aus der bereitgestellten Liste verwenden.
+- Hinweis: Dies ist eine komplementäre Unterstützung, keine medizinische Diagnose.
+
+Verfügbare Frequenzeinträge:
+${entryList}`;
+
+  try{
+    let body;
+    if(dnaFileData.type==='pdf'){
+      body={model:'claude-sonnet-4-6',max_tokens:1024,system:systemPrompt,
+        messages:[{role:'user',content:[
+          {type:'document',source:{type:'base64',media_type:'application/pdf',data:dnaFileData.base64}},
+          {type:'text',text:'Bitte analysiere diesen DNA-Bericht/diese genetischen Daten und schlage passende Rife-Frequenzeinträge vor.'}
+        ]}]};
+    } else {
+      body={model:'claude-sonnet-4-6',max_tokens:1024,system:systemPrompt,
+        messages:[{role:'user',content:`DNA-Datei: ${dnaFileData.name}\n\nInhalt:\n${dnaFileData.text}\n\nBitte analysiere und schlage passende Rife-Frequenzeinträge vor.`}]};
+    }
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify(body)
+    });
+    if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.error?.message||'API-Fehler '+res.status);}
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'';
+    const jsonMatch=text.match(/\[[\s\S]*\]/);
+    if(!jsonMatch)throw new Error('Unerwartetes Antwortformat.');
+    const matches=JSON.parse(jsonMatch[0]);
+    if(!matches.length){resultEl.innerHTML='<div style="font-size:0.78rem;color:var(--muted);">Keine spezifischen Einträge gefunden.</div>';return;}
+
+    resultEl.innerHTML=`<div style="font-weight:600;font-size:0.8rem;color:var(--primary-dk);margin-bottom:8px;">🧬 ${matches.length} Frequenzvorschläge aus DNA-Analyse:</div>`;
+    matches.forEach(m=>{
+      const entry=DATA.find(d=>d.de===m.de);if(!entry)return;
+      const hz=getTokens(entry.f).slice(0,3).join(' · ')+' Hz';
+      const prio=m.priority||'mittel';
+      const prioClr=prio==='hoch'?'#c0392b':prio==='mittel'?'#c9963e':'var(--muted)';
+      const card=document.createElement('div');card.className='ai-match-card';
+      card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="ai-match-name">${entry.de}</div><span style="font-size:0.65rem;font-weight:700;color:${prioClr};text-transform:uppercase;">${prio}</span></div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${getTokens(entry.f).length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>`;
+      card.onclick=()=>{
+        const eIdx=DATA.indexOf(entry);
+        document.getElementById('search').value='';filterList();
+        const feEl=document.getElementById('fe-'+eIdx);
+        if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.getElementById('ai-panel').classList.remove('open');
+      };
+      resultEl.appendChild(card);
+    });
+  }catch(e){
+    resultEl.innerHTML=`<div style="color:#c0392b;font-size:0.78rem;">⚠ Fehler: ${e.message}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent='🧬 DNA analysieren & Frequenzen vorschlagen';
+  }
 }
 function toggleKeyRow(){
   const row=document.getElementById('ai-key-row');
