@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
-<meta name="theme-color" content="#00d4ff">
+<meta name="theme-color" content="#4f7ef7">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="FrequenzApp">
@@ -15,36 +15,36 @@
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
 
 :root {
-  --bg: #050810;
-  --surface: #0a0f1e;
-  --card: #0d1428;
-  --border: #1a2540;
-  --glow: #00d4ff;
-  --glow2: #00ff9f;
-  --glow3: #ff6b35;
-  --text: #c8d8f0;
-  --muted: #4a6080;
-  --active: #00d4ff;
+  --bg: #eef2ff;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --border: #c7d2ee;
+  --glow: #4f7ef7;
+  --glow2: #10c985;
+  --glow3: #f97316;
+  --text: #1e2a4a;
+  --muted: #6b7fa8;
+  --active: #4f7ef7;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  background: var(--bg);
+  background: linear-gradient(160deg, #eef2ff 0%, #f5f0ff 100%);
   color: var(--text);
   font-family: 'Share Tech Mono', monospace;
   min-height: 100vh;
   overflow-x: hidden;
 }
 
-/* Grid background */
+/* Subtiles Muster */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   background-image:
-    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+    linear-gradient(rgba(79,126,247,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,126,247,0.04) 1px, transparent 1px);
   background-size: 40px 40px;
   pointer-events: none;
   z-index: 0;
@@ -109,7 +109,6 @@ canvas#vis {
   color: var(--glow);
   letter-spacing: 0.08em;
   min-height: 1.4em;
-  text-shadow: 0 0 18px rgba(0,212,255,0.5);
 }
 
 #np-freq {
@@ -118,7 +117,6 @@ canvas#vis {
   font-weight: 700;
   color: var(--glow2);
   letter-spacing: 0.05em;
-  text-shadow: 0 0 24px rgba(0,255,159,0.6);
   min-height: 1.2em;
   transition: all 0.2s;
 }
@@ -144,8 +142,8 @@ canvas#vis {
 
 .ctrl-btn {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
   color: var(--text);
   cursor: pointer;
   font-family: 'Orbitron', monospace;
@@ -156,38 +154,40 @@ canvas#vis {
   display: flex;
   align-items: center;
   gap: 7px;
+  box-shadow: 0 1px 4px rgba(79,126,247,0.08);
 }
 
 .ctrl-btn:hover {
   border-color: var(--glow);
   color: var(--glow);
-  box-shadow: 0 0 12px rgba(0,212,255,0.2);
+  box-shadow: 0 3px 12px rgba(79,126,247,0.18);
 }
 
 .ctrl-btn.primary {
-  background: rgba(0,212,255,0.1);
+  background: var(--glow);
   border-color: var(--glow);
-  color: var(--glow);
+  color: #ffffff;
   font-size: 0.85rem;
   padding: 12px 28px;
+  box-shadow: 0 3px 14px rgba(79,126,247,0.3);
 }
 
 .ctrl-btn.primary:hover {
-  background: rgba(0,212,255,0.2);
-  box-shadow: 0 0 20px rgba(0,212,255,0.35);
+  background: #3b6ef0;
+  box-shadow: 0 5px 20px rgba(79,126,247,0.4);
 }
 
 .ctrl-btn.playing {
-  background: rgba(0,255,159,0.1);
+  background: var(--glow2);
   border-color: var(--glow2);
-  color: var(--glow2);
-  box-shadow: 0 0 20px rgba(0,255,159,0.25);
+  color: #ffffff;
+  box-shadow: 0 3px 14px rgba(16,201,133,0.3);
   animation: pulse-btn 2s ease-in-out infinite;
 }
 
 @keyframes pulse-btn {
-  0%,100% { box-shadow: 0 0 20px rgba(0,255,159,0.25); }
-  50% { box-shadow: 0 0 32px rgba(0,255,159,0.5); }
+  0%,100% { box-shadow: 0 3px 14px rgba(16,201,133,0.25); }
+  50% { box-shadow: 0 5px 24px rgba(16,201,133,0.5); }
 }
 
 /* Volume + waveform row */
@@ -221,11 +221,11 @@ canvas#vis {
 }
 #vol-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--glow);
-  box-shadow: 0 0 8px rgba(0,212,255,0.6);
+  box-shadow: 0 2px 6px rgba(79,126,247,0.4);
   cursor: pointer;
 }
 
@@ -249,11 +249,11 @@ canvas#vis {
 }
 #dur-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--glow3);
-  box-shadow: 0 0 8px rgba(255,107,53,0.6);
+  box-shadow: 0 2px 6px rgba(249,115,22,0.4);
   cursor: pointer;
 }
 
@@ -286,12 +286,13 @@ canvas#vis {
   flex-shrink: 0;
 }
 .entry-play-all:hover {
-  background: rgba(0,255,159,0.2);
-  box-shadow: 0 0 10px rgba(0,255,159,0.3);
+  background: rgba(16,201,133,0.18);
+  box-shadow: 0 3px 10px rgba(16,201,133,0.25);
 }
 .entry-play-all.running {
-  background: rgba(0,255,159,0.2);
+  background: var(--glow2);
   border-color: var(--glow2);
+  color: #ffffff;
   animation: pulse-btn 1.5s ease-in-out infinite;
 }
 
@@ -330,7 +331,7 @@ select#waveform {
   letter-spacing: 0.05em;
   transition: border-color 0.2s;
 }
-#search:focus { border-color: var(--glow); box-shadow: 0 0 12px rgba(0,212,255,0.1); }
+#search:focus { border-color: var(--glow); box-shadow: 0 0 0 3px rgba(79,126,247,0.12); }
 #search::placeholder { color: var(--muted); }
 #search-wrap::before {
   content: '⌕';
@@ -363,18 +364,19 @@ select#waveform {
 
 .freq-entry {
   background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
   margin-bottom: 8px;
   overflow: hidden;
-  transition: border-color 0.15s;
+  transition: all 0.15s;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(79,126,247,0.06);
 }
 
-.freq-entry:hover { border-color: var(--glow); }
+.freq-entry:hover { border-color: var(--glow); box-shadow: 0 4px 16px rgba(79,126,247,0.12); }
 .freq-entry.active-entry {
   border-color: var(--glow2);
-  box-shadow: 0 0 16px rgba(0,255,159,0.15);
+  box-shadow: 0 4px 16px rgba(16,201,133,0.18);
 }
 
 .entry-header {
@@ -417,7 +419,7 @@ select#waveform {
   white-space: nowrap;
   font-family: 'Share Tech Mono', monospace;
 }
-.freq-entry:hover .entry-toggle { border-color: var(--glow); color: var(--glow); }
+.freq-entry:hover .entry-toggle { border-color: var(--glow); color: var(--glow); background: rgba(79,126,247,0.05); }
 
 .freq-chips {
   display: none;
@@ -429,10 +431,10 @@ select#waveform {
 .freq-entry.open .freq-chips { display: flex; }
 
 .chip {
-  background: rgba(0,212,255,0.08);
-  border: 1px solid rgba(0,212,255,0.2);
-  border-radius: 6px;
-  color: var(--glow);
+  background: rgba(79,126,247,0.08);
+  border: 1.5px solid rgba(79,126,247,0.25);
+  border-radius: 8px;
+  color: #2563eb;
   cursor: pointer;
   font-family: 'Orbitron', monospace;
   font-size: 0.72rem;
@@ -443,29 +445,29 @@ select#waveform {
 }
 
 .chip:hover {
-  background: rgba(0,212,255,0.2);
-  box-shadow: 0 0 10px rgba(0,212,255,0.3);
+  background: rgba(79,126,247,0.16);
+  box-shadow: 0 3px 10px rgba(79,126,247,0.2);
   transform: translateY(-1px);
 }
 
 .chip.playing-chip {
-  background: rgba(0,255,159,0.15);
+  background: rgba(16,201,133,0.14);
   border-color: var(--glow2);
-  color: var(--glow2);
-  box-shadow: 0 0 12px rgba(0,255,159,0.4);
+  color: #059669;
+  box-shadow: 0 3px 12px rgba(16,201,133,0.3);
   animation: chip-pulse 1.5s ease-in-out infinite;
 }
 
 @keyframes chip-pulse {
-  0%,100% { box-shadow: 0 0 12px rgba(0,255,159,0.4); }
-  50% { box-shadow: 0 0 22px rgba(0,255,159,0.7); }
+  0%,100% { box-shadow: 0 3px 12px rgba(16,201,133,0.25); }
+  50% { box-shadow: 0 5px 20px rgba(16,201,133,0.5); }
 }
 
 /* Freq queue chips (multiple play) */
 .chip.queued {
-  background: rgba(255,107,53,0.1);
-  border-color: rgba(255,107,53,0.4);
-  color: var(--glow3);
+  background: rgba(249,115,22,0.1);
+  border-color: rgba(249,115,22,0.4);
+  color: #ea580c;
 }
 
 /* ── BACKGROUND MUSIC ── */
@@ -635,7 +637,7 @@ footer {
 
 /* ── CLIENT BAR ── */
 #client-bar {
-  background: rgba(0,212,255,0.04);
+  background: rgba(79,126,247,0.04);
   border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
@@ -698,7 +700,7 @@ footer {
   transition: background 0.1s;
 }
 .ac-item:last-child { border-bottom: none; }
-.ac-item:hover { background: rgba(0,212,255,0.07); }
+.ac-item:hover { background: rgba(79,126,247,0.07); }
 .ac-item-name {
   font-family: 'Orbitron', monospace;
   font-size: 0.72rem;
@@ -717,8 +719,8 @@ footer {
   margin-top: 4px;
 }
 .ac-chip {
-  background: rgba(0,212,255,0.1);
-  border: 1px solid rgba(0,212,255,0.3);
+  background: rgba(79,126,247,0.1);
+  border: 1px solid rgba(79,126,247,0.3);
   border-radius: 4px;
   color: var(--glow);
   font-family: 'Orbitron', monospace;
@@ -728,7 +730,7 @@ footer {
   cursor: pointer;
   transition: all 0.1s;
 }
-.ac-chip:hover { background: rgba(0,212,255,0.25); box-shadow: 0 0 8px rgba(0,212,255,0.3); }
+.ac-chip:hover { background: rgba(79,126,247,0.25); box-shadow: 0 0 8px rgba(79,126,247,0.3); }
 
 /* ── CLIENT MODAL ── */
 #client-modal {
@@ -806,7 +808,7 @@ footer {
 .cm-input::placeholder { color: var(--muted); }
 .cm-btn-add {
   width: 100%;
-  background: rgba(0,212,255,0.1);
+  background: rgba(79,126,247,0.1);
   border: 1px solid var(--glow);
   border-radius: 6px;
   color: var(--glow);
@@ -817,7 +819,7 @@ footer {
   padding: 10px;
   transition: all 0.15s;
 }
-.cm-btn-add:hover { background: rgba(0,212,255,0.2); }
+.cm-btn-add:hover { background: rgba(79,126,247,0.2); }
 .cm-section-title {
   font-size: 0.65rem;
   color: var(--muted);
@@ -1405,7 +1407,7 @@ function drawVis() {
 
   if (!analyser || !oscillator) {
     // Idle flat line
-    ctx2.strokeStyle = 'rgba(0,212,255,0.15)';
+    ctx2.strokeStyle = 'rgba(79,126,247,0.2)';
     ctx2.lineWidth = 1;
     ctx2.beginPath();
     ctx2.moveTo(0, H/2);
@@ -1417,10 +1419,10 @@ function drawVis() {
   const buf = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(buf);
 
-  ctx2.strokeStyle = '#00d4ff';
+  ctx2.strokeStyle = '#4f7ef7';
   ctx2.lineWidth = 2 * devicePixelRatio;
-  ctx2.shadowColor = '#00d4ff';
-  ctx2.shadowBlur = 8;
+  ctx2.shadowColor = '#4f7ef7';
+  ctx2.shadowBlur = 6;
   ctx2.beginPath();
   const sliceW = W / buf.length;
   let x = 0;
