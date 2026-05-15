@@ -98,6 +98,35 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .sh-clear-btn{background:none;border:1px solid var(--border);border-radius:6px;font-size:0.67rem;padding:2px 8px;cursor:pointer;color:var(--muted);}
 .sh-clear-btn:hover{border-color:#c0392b;color:#c0392b;}
 
+/* ── KI-ASSISTENT ── */
+#ai-panel{background:var(--white);border-bottom:2px solid var(--gold);flex-shrink:0;}
+#ai-toggle-btn{width:100%;padding:10px 16px;background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:600;color:var(--primary-dk);text-align:left;}
+#ai-toggle-btn:hover{background:var(--light);}
+#ai-toggle-btn .ai-icon{font-size:1.1rem;}
+#ai-toggle-btn .ai-chevron{margin-left:auto;font-size:0.75rem;transition:transform 0.2s;}
+#ai-panel.open #ai-toggle-btn .ai-chevron{transform:rotate(180deg);}
+#ai-body{display:none;padding:12px 16px;border-top:1px solid var(--border);}
+#ai-panel.open #ai-body{display:block;}
+#ai-symptom{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--text);background:var(--light);resize:vertical;min-height:60px;outline:none;box-sizing:border-box;}
+#ai-symptom:focus{border-color:var(--gold);background:#fff;box-shadow:0 0 0 3px rgba(201,150,62,0.1);}
+#ai-actions{display:flex;gap:8px;margin-top:8px;align-items:center;}
+#ai-ask-btn{background:var(--gold);color:#fff;border:none;border-radius:var(--radius);padding:8px 18px;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'Inter',sans-serif;}
+#ai-ask-btn:hover{background:#b8842e;}
+#ai-ask-btn:disabled{background:var(--muted);cursor:not-allowed;}
+#ai-key-toggle{background:none;border:none;color:var(--muted);font-size:0.75rem;cursor:pointer;text-decoration:underline;}
+#ai-key-row{margin-top:8px;display:none;}
+#ai-key-row.visible{display:flex;gap:6px;}
+#ai-key-input{flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.8rem;font-family:'Inter',sans-serif;outline:none;}
+#ai-key-save{background:var(--primary);color:#fff;border:none;border-radius:var(--radius);padding:6px 12px;font-size:0.78rem;cursor:pointer;}
+#ai-result{margin-top:10px;}
+#ai-status{font-size:0.78rem;color:var(--muted);font-style:italic;}
+.ai-match-card{background:var(--light);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-top:6px;cursor:pointer;transition:all 0.15s;}
+.ai-match-card:hover{border-color:var(--primary);background:#fff;}
+.ai-match-name{font-weight:700;font-size:0.85rem;color:var(--primary-dk);}
+.ai-match-en{font-size:0.72rem;color:var(--muted);}
+.ai-match-hz{font-size:0.7rem;color:var(--gold);font-family:'Orbitron',monospace;margin-top:3px;}
+.ai-match-reason{font-size:0.72rem;color:var(--text);margin-top:3px;font-style:italic;}
+
 /* ── CENTER ── */
 #freq-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
 #search-wrap{padding:12px 14px;background:var(--white);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;}
@@ -292,6 +321,28 @@ select.pp-sel:focus{border-color:var(--primary);}
 
   <!-- ── MITTE: FREQUENZLISTE ── -->
   <main id="freq-panel">
+    <!-- KI-ASSISTENT -->
+    <div id="ai-panel">
+      <button id="ai-toggle-btn" onclick="toggleAiPanel()">
+        <span class="ai-icon">✦</span>
+        KI-Frequenzassistent – Beschwerden beschreiben
+        <span class="ai-chevron">▼</span>
+      </button>
+      <div id="ai-body">
+        <textarea id="ai-symptom" placeholder="Beschreiben Sie die Beschwerden – z.B. chronischer Tinnitus im linken Ohr, Schlafstörungen, Erschöpfung …"></textarea>
+        <div id="ai-actions">
+          <button id="ai-ask-btn" onclick="askAI()">✦ Frequenzen finden</button>
+          <button id="ai-key-toggle" onclick="toggleKeyRow()">API-Key einrichten</button>
+        </div>
+        <div id="ai-key-row">
+          <input type="password" id="ai-key-input" placeholder="sk-ant-api03-…">
+          <button id="ai-key-save" onclick="saveApiKey()">Speichern</button>
+        </div>
+        <div id="ai-result">
+          <div id="ai-status"></div>
+        </div>
+      </div>
+    </div>
     <div id="search-wrap">
       <span id="search-icon">⌕</span>
       <input type="text" id="search" placeholder="Beschwerde suchen – z.B. Tinnitus, Kopfschmerzen, Candida, 727 Hz …" oninput="filterList()">
@@ -1092,6 +1143,106 @@ function deleteActiveClient(){
   clientStore.remove(activeClientId);setActiveClient(null);
 }
 document.getElementById('client-modal').onclick=function(e){if(e.target===this)closeClientModal();};
+
+// ════════════════════════════════════
+// KI-ASSISTENT
+// ════════════════════════════════════
+function toggleAiPanel(){
+  document.getElementById('ai-panel').classList.toggle('open');
+}
+function toggleKeyRow(){
+  const row=document.getElementById('ai-key-row');
+  row.classList.toggle('visible');
+  if(row.classList.contains('visible')){
+    const saved=localStorage.getItem('rife_ai_key')||'';
+    document.getElementById('ai-key-input').value=saved;
+    document.getElementById('ai-key-input').focus();
+  }
+}
+function saveApiKey(){
+  const key=document.getElementById('ai-key-input').value.trim();
+  if(!key){alert('Bitte einen API-Key eingeben.');return;}
+  localStorage.setItem('rife_ai_key',key);
+  document.getElementById('ai-key-row').classList.remove('visible');
+  document.getElementById('ai-status').textContent='✓ API-Key gespeichert.';
+}
+async function askAI(){
+  const key=localStorage.getItem('rife_ai_key')||'';
+  if(!key){
+    document.getElementById('ai-key-row').classList.add('visible');
+    document.getElementById('ai-status').textContent='⚠ Bitte zuerst den API-Key eingeben.';
+    return;
+  }
+  const symptom=document.getElementById('ai-symptom').value.trim();
+  if(!symptom){alert('Bitte Beschwerden beschreiben.');return;}
+
+  const btn=document.getElementById('ai-ask-btn');
+  const statusEl=document.getElementById('ai-status');
+  const resultEl=document.getElementById('ai-result');
+  btn.disabled=true;btn.textContent='… analysiert';
+  statusEl.textContent='KI analysiert die Beschwerden …';
+  resultEl.innerHTML='<div id="ai-status">KI analysiert die Beschwerden …</div>';
+
+  const entryList=DATA.map(d=>`${d.de} (${d.en})`).join('\n');
+  const systemPrompt=`Du bist ein Rife-Frequenz-Spezialist-Assistent.
+Du hilfst dabei, passende Frequenzeinträge aus einer Datenbank zu finden.
+
+WICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Array. Kein erklärender Text davor oder danach.
+Format: [{"de":"Exakter Name aus der Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)"}]
+Maximal 5 Einträge. Nur Einträge aus der bereitgestellten Liste verwenden.
+
+Verfügbare Einträge:
+${entryList}`;
+
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':key,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({
+        model:'claude-haiku-4-5-20251001',
+        max_tokens:512,
+        messages:[{role:'user',content:`Beschwerden: ${symptom}`}],
+        system:systemPrompt
+      })
+    });
+    if(!res.ok){
+      const err=await res.json().catch(()=>({}));
+      throw new Error(err.error?.message||'API-Fehler '+res.status);
+    }
+    const data=await res.json();
+    const text=data.content?.[0]?.text||'';
+    const jsonMatch=text.match(/\[[\s\S]*\]/);
+    if(!jsonMatch)throw new Error('Unerwartetes Antwortformat.');
+    const matches=JSON.parse(jsonMatch[0]);
+    if(!matches.length){resultEl.innerHTML='<div id="ai-status">Keine passenden Einträge gefunden.</div>';return;}
+
+    resultEl.innerHTML='<div id="ai-status" style="color:var(--primary-dk);font-weight:600;margin-bottom:6px;">✦ '+matches.length+' Vorschläge gefunden:</div>';
+    matches.forEach(m=>{
+      const entry=DATA.find(d=>d.de===m.de);
+      if(!entry)return;
+      const hz=getTokens(entry.f).slice(0,3).join(' · ')+' Hz';
+      const card=document.createElement('div');card.className='ai-match-card';
+      card.innerHTML=`<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${getTokens(entry.f).length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>`;
+      card.onclick=()=>{
+        const eIdx=DATA.indexOf(entry);
+        document.getElementById('search').value='';filterList();
+        const feEl=document.getElementById('fe-'+eIdx);
+        if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.getElementById('ai-panel').classList.remove('open');
+      };
+      resultEl.appendChild(card);
+    });
+  }catch(e){
+    resultEl.innerHTML=`<div id="ai-status" style="color:#c0392b;">⚠ Fehler: ${e.message}</div>`;
+  }finally{
+    btn.disabled=false;btn.textContent='✦ Frequenzen finden';
+  }
+}
 
 // ════════════════════════════════════
 // FREQUENCY LIST
