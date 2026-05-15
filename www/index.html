@@ -587,9 +587,246 @@ footer {
   position: relative;
   z-index: 1;
 }
+
+/* ── CLIENT BAR ── */
+#client-bar {
+  background: rgba(0,212,255,0.04);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px;
+  position: relative;
+  z-index: 10;
+}
+#client-bar .cb-label {
+  font-size: 0.62rem;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+#client-bar .cb-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.78rem;
+  color: var(--glow);
+  letter-spacing: 0.06em;
+  flex: 1;
+}
+#client-bar .cb-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  padding: 5px 12px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+#client-bar .cb-btn:hover { border-color: var(--glow); color: var(--glow); }
+#client-bar .cb-btn.active-client { border-color: var(--glow2); color: var(--glow2); }
+
+/* ── AUTOCOMPLETE ── */
+#search-wrap { position: relative; }
+#autocomplete-list {
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--glow);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+#autocomplete-list.visible { display: block; }
+.ac-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.ac-item:last-child { border-bottom: none; }
+.ac-item:hover { background: rgba(0,212,255,0.07); }
+.ac-item-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.72rem;
+  color: var(--text);
+  margin-bottom: 5px;
+}
+.ac-item-en {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-style: italic;
+}
+.ac-freqs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+.ac-chip {
+  background: rgba(0,212,255,0.1);
+  border: 1px solid rgba(0,212,255,0.3);
+  border-radius: 4px;
+  color: var(--glow);
+  font-family: 'Orbitron', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: all 0.1s;
+}
+.ac-chip:hover { background: rgba(0,212,255,0.25); box-shadow: 0 0 8px rgba(0,212,255,0.3); }
+
+/* ── CLIENT MODAL ── */
+#client-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5,8,16,0.88);
+  z-index: 500;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 30px 16px 60px;
+  overflow-y: auto;
+}
+#client-modal.open { display: flex; }
+.cm-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 520px;
+  padding: 24px;
+}
+.cm-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.cm-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.95rem;
+  color: var(--glow);
+  letter-spacing: 0.08em;
+}
+.cm-close {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 4px 10px;
+  transition: all 0.15s;
+}
+.cm-close:hover { border-color: var(--glow3); color: var(--glow3); }
+.cm-form {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.cm-form-title {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.cm-input {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.85rem;
+  padding: 9px 12px;
+  margin-bottom: 10px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.cm-input:focus { border-color: var(--glow); }
+.cm-input:last-of-type { margin-bottom: 12px; }
+.cm-input::placeholder { color: var(--muted); }
+.cm-btn-add {
+  width: 100%;
+  background: rgba(0,212,255,0.1);
+  border: 1px solid var(--glow);
+  border-radius: 6px;
+  color: var(--glow);
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 10px;
+  transition: all 0.15s;
+}
+.cm-btn-add:hover { background: rgba(0,212,255,0.2); }
+.cm-section-title {
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.cm-client-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cm-client-item:hover { border-color: var(--glow); }
+.cm-client-item.selected { border-color: var(--glow2); background: rgba(0,255,159,0.04); }
+.cm-client-info { flex: 1; min-width: 0; }
+.cm-client-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.cm-client-meta { font-size: 0.62rem; color: var(--muted); }
+.cm-client-actions { display: flex; gap: 5px; flex-shrink: 0; }
+.cm-cbtn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.62rem;
+  padding: 3px 8px;
+  transition: all 0.12s;
+}
+.cm-cbtn:hover { border-color: var(--glow); color: var(--glow); }
+.cm-cbtn.del:hover { border-color: var(--glow3); color: var(--glow3); }
+.cm-empty { text-align: center; color: var(--muted); font-size: 0.75rem; padding: 20px; }
 </style>
 </head>
 <body>
+
+<!-- ── CLIENT BAR ── -->
+<div id="client-bar">
+  <span class="cb-label">Klient</span>
+  <span class="cb-name" id="cb-active-name">Kein Klient ausgewählt</span>
+  <button class="cb-btn" id="cb-open-btn" onclick="openClientModal()">+ Klienten</button>
+</div>
 
 <header>
   <h1>⬡ RIFE FREQUENCY PLAYER</h1>
@@ -662,7 +899,8 @@ footer {
 </div>
 
 <div id="search-wrap">
-  <input type="text" id="search" placeholder="Suche (z.B. Candida, Akne, 727…)" oninput="filterList()">
+  <input type="text" id="search" placeholder="Beschwerde suchen (z.B. Kopfschmerzen, Rücken, 727…)" oninput="filterList(); showAutocomplete()" onfocus="showAutocomplete()" onblur="hideAutocomplete()">
+  <div id="autocomplete-list"></div>
 </div>
 
 <div id="freq-list-wrap">
@@ -671,6 +909,25 @@ footer {
 </div>
 
 <footer>Kopfhörer empfohlen · Lautstärke schrittweise erhöhen · Web Audio API (kein Server erforderlich)</footer>
+
+<!-- ── CLIENT MODAL ── -->
+<div id="client-modal" onclick="if(event.target===this)closeClientModal()">
+  <div class="cm-box">
+    <div class="cm-header">
+      <span class="cm-title">⬡ KLIENTENVERWALTUNG</span>
+      <button class="cm-close" onclick="closeClientModal()">✕</button>
+    </div>
+    <div class="cm-form">
+      <div class="cm-form-title">Neuen Klienten anlegen</div>
+      <input class="cm-input" id="cm-name" placeholder="Name *" type="text">
+      <input class="cm-input" id="cm-dob" placeholder="Geburtsdatum (TT.MM.JJJJ, optional)" type="text">
+      <input class="cm-input" id="cm-notes" placeholder="Notizen (optional)" type="text">
+      <button class="cm-btn-add" onclick="addClient()">+ KLIENT ANLEGEN</button>
+    </div>
+    <div class="cm-section-title">Gespeicherte Klienten</div>
+    <div id="cm-client-list"></div>
+  </div>
+</div>
 
 <script>
 // ── DATA ──
@@ -866,6 +1123,34 @@ const DATA = [
 
 DATA.sort((a,b) => a.de.localeCompare(b.de,'de'));
 
+// ── CLIENT STORE ──
+let activeClientId = localStorage.getItem('rife_active_client') || null;
+
+const clientStore = {
+  getAll() { return JSON.parse(localStorage.getItem('rife_clients') || '[]'); },
+  save(c) { localStorage.setItem('rife_clients', JSON.stringify(c)); },
+  add(name, dob, notes) {
+    const all = this.getAll();
+    const c = { id: Date.now().toString(), name, dob, notes, sessions: [], created: new Date().toISOString() };
+    all.push(c);
+    this.save(all);
+    return c;
+  },
+  remove(id) { this.save(this.getAll().filter(c => c.id !== id)); },
+  get(id) { return this.getAll().find(c => c.id === id); },
+  logSession(clientId, entry, hz) {
+    const all = this.getAll().map(c => {
+      if (c.id === clientId) {
+        c.sessions = c.sessions || [];
+        c.sessions.unshift({ de: entry.de, hz, date: new Date().toISOString() });
+        if (c.sessions.length > 100) c.sessions = c.sessions.slice(0, 100);
+      }
+      return c;
+    });
+    this.save(all);
+  }
+};
+
 // ── AUDIO ENGINE ──
 let audioCtx = null;
 let oscillator = null;
@@ -936,6 +1221,7 @@ function playFreq(hz, entryObj, chipIdx) {
   // Update UI
   document.getElementById('np-name').textContent = entryObj.de;
   document.getElementById('np-en').textContent = entryObj.en;
+  if (activeClientId) clientStore.logSession(activeClientId, entryObj, clamped);
   document.getElementById('np-freq').textContent = clamped % 1 === 0 ? clamped + ' Hz' : clamped.toFixed(1) + ' Hz';
 
   const btn = document.getElementById('btn-play');
@@ -1126,6 +1412,122 @@ function filterList() {
 }
 
 buildList(DATA);
+
+// ── CLIENT MANAGEMENT ──
+function openClientModal() {
+  renderClientList();
+  document.getElementById('client-modal').classList.add('open');
+}
+function closeClientModal() {
+  document.getElementById('client-modal').classList.remove('open');
+}
+function addClient() {
+  const name = document.getElementById('cm-name').value.trim();
+  if (!name) { document.getElementById('cm-name').focus(); return; }
+  const dob = document.getElementById('cm-dob').value.trim();
+  const notes = document.getElementById('cm-notes').value.trim();
+  clientStore.add(name, dob, notes);
+  document.getElementById('cm-name').value = '';
+  document.getElementById('cm-dob').value = '';
+  document.getElementById('cm-notes').value = '';
+  renderClientList();
+}
+function selectClient(id) {
+  activeClientId = id;
+  if (id) localStorage.setItem('rife_active_client', id);
+  else localStorage.removeItem('rife_active_client');
+  const c = id ? clientStore.get(id) : null;
+  document.getElementById('cb-active-name').textContent = c ? c.name : 'Kein Klient ausgewählt';
+  document.getElementById('cb-open-btn').textContent = c ? '✎ Klienten' : '+ Klienten';
+  document.getElementById('cb-open-btn').className = c ? 'cb-btn active-client' : 'cb-btn';
+  renderClientList();
+}
+function deleteClient(id) {
+  if (!confirm('Klient wirklich löschen?')) return;
+  clientStore.remove(id);
+  if (activeClientId === id) selectClient(null);
+  renderClientList();
+}
+function showHistory(id) {
+  const c = clientStore.get(id);
+  if (!c || !c.sessions.length) { alert('Noch keine Sitzungen für diesen Klienten.'); return; }
+  const txt = c.sessions.slice(0, 30).map(s =>
+    new Date(s.date).toLocaleDateString('de-DE') + '  –  ' + s.de + '  (' + s.hz + ' Hz)'
+  ).join('\n');
+  alert('SITZUNGSHISTORIE: ' + c.name + '\n\n' + txt);
+}
+function renderClientList() {
+  const all = clientStore.getAll();
+  const el = document.getElementById('cm-client-list');
+  if (!all.length) { el.innerHTML = '<div class="cm-empty">Noch keine Klienten angelegt.</div>'; return; }
+  el.innerHTML = all.map(c => `
+    <div class="cm-client-item ${activeClientId === c.id ? 'selected' : ''}" onclick="selectClient('${c.id}')">
+      <div class="cm-client-info">
+        <div class="cm-client-name">${c.name}</div>
+        <div class="cm-client-meta">${c.dob ? 'GEB: ' + c.dob + ' · ' : ''}${c.sessions.length} Sitzung(en)${c.notes ? ' · ' + c.notes : ''}</div>
+      </div>
+      <div class="cm-client-actions">
+        <button class="cm-cbtn" onclick="event.stopPropagation();showHistory('${c.id}')">HIST</button>
+        <button class="cm-cbtn del" onclick="event.stopPropagation();deleteClient('${c.id}')">✕</button>
+      </div>
+    </div>`).join('');
+}
+// Aktiven Klienten beim Laden wiederherstellen
+(function() {
+  if (activeClientId) {
+    const c = clientStore.get(activeClientId);
+    if (c) {
+      document.getElementById('cb-active-name').textContent = c.name;
+      document.getElementById('cb-open-btn').textContent = '✎ Klienten';
+      document.getElementById('cb-open-btn').className = 'cb-btn active-client';
+    } else {
+      activeClientId = null;
+      localStorage.removeItem('rife_active_client');
+    }
+  }
+})();
+
+// ── AUTOCOMPLETE / BESCHWERDE-SUCHE ──
+let acTimer = null;
+function showAutocomplete() {
+  clearTimeout(acTimer);
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const dd = document.getElementById('autocomplete-list');
+  if (q.length < 2) { dd.classList.remove('visible'); return; }
+  const hits = DATA.filter(d =>
+    d.de.toLowerCase().includes(q) || d.en.toLowerCase().includes(q) || d.f.includes(q)
+  ).slice(0, 7);
+  if (!hits.length) { dd.classList.remove('visible'); return; }
+  dd.innerHTML = hits.map(item => {
+    const idx = DATA.indexOf(item);
+    const tokens = getNumericTokens(item.f).slice(0, 7);
+    const chips = tokens.map((tok, i) =>
+      `<span class="ac-chip" onmousedown="event.preventDefault();playFreq('${tok}',DATA[${idx}],${i});hideAutocomplete()">${tok} Hz</span>`
+    ).join('');
+    return `<div class="ac-item" onmousedown="event.preventDefault();jumpToEntry(${idx})">
+      <div class="ac-item-name">${item.de} <span class="ac-item-en">· ${item.en}</span></div>
+      <div class="ac-freqs">${chips}</div>
+    </div>`;
+  }).join('');
+  dd.classList.add('visible');
+}
+function hideAutocomplete() {
+  acTimer = setTimeout(() => document.getElementById('autocomplete-list').classList.remove('visible'), 200);
+}
+function jumpToEntry(idx) {
+  hideAutocomplete();
+  document.getElementById('search').value = '';
+  filterList();
+  setTimeout(() => {
+    const el = document.getElementById('entry-' + idx);
+    if (!el) return;
+    if (!el.classList.contains('open')) {
+      el.classList.add('open');
+      el.querySelector('.entry-toggle').textContent = '▲ FREQ';
+    }
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
 
 // ── BACKGROUND MUSIC ──
 const bgAudio = new Audio();
