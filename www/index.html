@@ -1201,29 +1201,47 @@ function handleDnaDrop(e){
   e.preventDefault();document.getElementById('dna-drop').classList.remove('drag-over');
   const f=e.dataTransfer.files[0];if(f)handleDnaFile(f);
 }
+const DNA_PDF_MAX=512*1024; // 500 KB
+const DNA_TXT_MAX=40000;    // ~10K tokens
+
 function handleDnaFile(file){
   if(!file)return;
-  const allowed=['application/pdf','text/plain','text/csv','text/x-vcard'];
   const ext=file.name.split('.').pop().toLowerCase();
   const allowedExt=['pdf','txt','csv','vcf'];
   if(!allowedExt.includes(ext)){alert('Bitte PDF, TXT, CSV oder VCF Datei verwenden.');return;}
-  document.getElementById('dna-file-info').style.display='block';
-  document.getElementById('dna-file-info').textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
-  document.getElementById('dna-result').innerHTML='';
+  const infoEl=document.getElementById('dna-file-info');
+  const resultEl=document.getElementById('dna-result');
+  infoEl.style.display='block';
+  resultEl.innerHTML='';
+  dnaFileData=null;
+  document.getElementById('dna-analyze-btn').disabled=true;
+
   if(ext==='pdf'){
+    if(file.size>DNA_PDF_MAX){
+      infoEl.style.background='#ffeaea';infoEl.style.color='#c0392b';
+      infoEl.innerHTML=`⚠ PDF zu groß (${Math.round(file.size/1024)} KB) – max. 500 KB.<br>
+        <strong>Tipp:</strong> Öffne das PDF, kopiere die wichtigsten Befunde und füge sie im Tab <em>✦ Beschwerden</em> als Text ein.`;
+      return;
+    }
+    infoEl.style.background='';infoEl.style.color='';
+    infoEl.textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
     const reader=new FileReader();
     reader.onload=e=>{dnaFileData={type:'pdf',base64:e.target.result.split(',')[1],name:file.name};document.getElementById('dna-analyze-btn').disabled=false;};
     reader.readAsDataURL(file);
   } else {
+    infoEl.style.background='';infoEl.style.color='';
+    infoEl.textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – wird geladen …';
     const reader=new FileReader();
     reader.onload=e=>{
       let text=e.target.result;
-      // Für große Dateien (z.B. 23andMe raw data): Metadaten + erste 8000 Zeichen
-      if(text.length>12000){
+      if(text.length>DNA_TXT_MAX){
         const lines=text.split('\n');
         const header=lines.filter(l=>l.startsWith('#')).slice(0,30).join('\n');
-        const sample=lines.filter(l=>!l.startsWith('#')).slice(0,200).join('\n');
-        text=header+'\n[...gekürzt, '+lines.length+' Zeilen gesamt...]\n'+sample;
+        const sample=lines.filter(l=>!l.startsWith('#')).slice(0,300).join('\n');
+        text=header+'\n[...gekürzt auf relevante Zeilen, '+lines.length+' Zeilen gesamt...]\n'+sample;
+        infoEl.textContent='📄 '+file.name+' – gekürzt für Analyse ('+lines.length+' Zeilen)';
+      } else {
+        infoEl.textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
       }
       dnaFileData={type:'text',text,name:file.name};
       document.getElementById('dna-analyze-btn').disabled=false;
@@ -1240,20 +1258,11 @@ async function analyzeDNA(){
   btn.disabled=true;btn.textContent='… wird analysiert';
   resultEl.innerHTML='<div style="color:var(--muted);font-size:0.78rem;font-style:italic;">🧬 Claude analysiert die DNA-Daten …</div>';
 
-  const entryList=DATA.map(d=>`${d.de} (${d.en})`).join('\n');
-  const systemPrompt=`Du bist ein spezialisierter Berater für komplementäre Therapieansätze mit Schwerpunkt auf Rife-Frequenztherapie.
-Du analysierst genetische Daten oder Berichte und identifizierst mögliche gesundheitliche Prädispositionen oder Schwachstellen.
-Basierend darauf schlägst du passende Rife-Frequenzeinträge als unterstützende komplementäre Maßnahme vor.
-
-WICHTIG:
-- Antworte AUSSCHLIESSLICH mit einem JSON-Array, kein erklärender Text.
-- Format: [{"de":"Exakter Name aus der Liste","reason":"Begründung basierend auf genetischem Befund (max 15 Wörter)","priority":"hoch|mittel|niedrig"}]
-- Maximal 8 Einträge, nach Relevanz sortiert.
-- Nur Einträge aus der bereitgestellten Liste verwenden.
-- Hinweis: Dies ist eine komplementäre Unterstützung, keine medizinische Diagnose.
-
-Verfügbare Frequenzeinträge:
-${entryList}`;
+  const entryList=DATA.map(d=>d.de).join(', ');
+  const systemPrompt=`Du bist ein Berater für Rife-Frequenztherapie. Analysiere den DNA-Bericht und schlage passende Einträge aus der Liste vor.
+Antworte NUR mit JSON-Array (kein Text davor/danach):
+[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","priority":"hoch|mittel|niedrig"}]
+Max. 8 Einträge. Nur Namen exakt aus dieser Liste: ${entryList}`;
 
   try{
     let body;
