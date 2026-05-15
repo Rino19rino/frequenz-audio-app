@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rife Frequenz-Player</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+:root {
+  --bg: #050810;
+  --surface: #0a0f1e;
+  --card: #0d1428;
+  --border: #1a2540;
+  --glow: #00d4ff;
+  --glow2: #00ff9f;
+  --glow3: #ff6b35;
+  --text: #c8d8f0;
+  --muted: #4a6080;
+  --active: #00d4ff;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+header {
+  text-align: center;
+  padding: 36px 20px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+header h1 {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(1.4rem, 4vw, 2.4rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  background: linear-gradient(90deg, var(--glow), var(--glow2));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: none;
+  margin-bottom: 6px;
+}
+
+header p {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+/* ── VISUALIZER ── */
+#visualizer-wrap {
+  position: relative;
+  z-index: 1;
+  margin: 0 auto 16px;
+  max-width: 700px;
+  padding: 0 20px;
+}
+
+canvas#vis {
+  width: 100%;
+  height: 80px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  display: block;
+}
+
+/* ── NOW PLAYING ── */
+#now-playing {
+  text-align: center;
+  padding: 10px 20px 0;
+  position: relative;
+  z-index: 1;
+}
+
+#np-name {
+  font-family: 'Orbitron', monospace;
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  color: var(--glow);
+  letter-spacing: 0.08em;
+  min-height: 1.4em;
+  text-shadow: 0 0 18px rgba(0,212,255,0.5);
+}
+
+#np-freq {
+  font-size: 2rem;
+  font-family: 'Orbitron', monospace;
+  font-weight: 700;
+  color: var(--glow2);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 24px rgba(0,255,159,0.6);
+  min-height: 1.2em;
+  transition: all 0.2s;
+}
+
+#np-en {
+  color: var(--muted);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  min-height: 1.2em;
+}
+
+/* ── CONTROLS ── */
+#controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+
+.ctrl-btn {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  padding: 10px 18px;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.ctrl-btn:hover {
+  border-color: var(--glow);
+  color: var(--glow);
+  box-shadow: 0 0 12px rgba(0,212,255,0.2);
+}
+
+.ctrl-btn.primary {
+  background: rgba(0,212,255,0.1);
+  border-color: var(--glow);
+  color: var(--glow);
+  font-size: 0.85rem;
+  padding: 12px 28px;
+}
+
+.ctrl-btn.primary:hover {
+  background: rgba(0,212,255,0.2);
+  box-shadow: 0 0 20px rgba(0,212,255,0.35);
+}
+
+.ctrl-btn.playing {
+  background: rgba(0,255,159,0.1);
+  border-color: var(--glow2);
+  color: var(--glow2);
+  box-shadow: 0 0 20px rgba(0,255,159,0.25);
+  animation: pulse-btn 2s ease-in-out infinite;
+}
+
+@keyframes pulse-btn {
+  0%,100% { box-shadow: 0 0 20px rgba(0,255,159,0.25); }
+  50% { box-shadow: 0 0 32px rgba(0,255,159,0.5); }
+}
+
+/* Volume + waveform row */
+#options-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  padding: 4px 20px 12px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 1;
+}
+
+.opt-label {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 120px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+#vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--glow);
+  box-shadow: 0 0 8px rgba(0,212,255,0.6);
+  cursor: pointer;
+}
+
+/* Duration display */
+#dur-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+#dur-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+#dur-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--glow3);
+  box-shadow: 0 0 8px rgba(255,107,53,0.6);
+  cursor: pointer;
+}
+
+/* Waveform select */
+select#waveform {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--glow);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+}
+
+/* ── SEARCH ── */
+#search-wrap {
+  max-width: 700px;
+  margin: 0 auto 12px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+#search {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  padding: 11px 16px 11px 40px;
+  outline: none;
+  letter-spacing: 0.05em;
+  transition: border-color 0.2s;
+}
+#search:focus { border-color: var(--glow); box-shadow: 0 0 12px rgba(0,212,255,0.1); }
+#search::placeholder { color: var(--muted); }
+#search-wrap::before {
+  content: '⌕';
+  position: absolute;
+  left: 34px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+
+/* ── FREQUENCY LIST ── */
+#freq-list-wrap {
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 20px 60px;
+  position: relative;
+  z-index: 1;
+}
+
+#freq-count {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  text-align: right;
+}
+
+.freq-entry {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+
+.freq-entry:hover { border-color: var(--glow); }
+.freq-entry.active-entry {
+  border-color: var(--glow2);
+  box-shadow: 0 0 16px rgba(0,255,159,0.15);
+}
+
+.entry-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  gap: 12px;
+}
+
+.entry-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-en {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.entry-toggle {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  font-family: 'Share Tech Mono', monospace;
+}
+.freq-entry:hover .entry-toggle { border-color: var(--glow); color: var(--glow); }
+
+.freq-chips {
+  display: none;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 14px;
+}
+
+.freq-entry.open .freq-chips { display: flex; }
+
+.chip {
+  background: rgba(0,212,255,0.08);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 6px;
+  color: var(--glow);
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 5px 11px;
+  transition: all 0.12s;
+}
+
+.chip:hover {
+  background: rgba(0,212,255,0.2);
+  box-shadow: 0 0 10px rgba(0,212,255,0.3);
+  transform: translateY(-1px);
+}
+
+.chip.playing-chip {
+  background: rgba(0,255,159,0.15);
+  border-color: var(--glow2);
+  color: var(--glow2);
+  box-shadow: 0 0 12px rgba(0,255,159,0.4);
+  animation: chip-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes chip-pulse {
+  0%,100% { box-shadow: 0 0 12px rgba(0,255,159,0.4); }
+  50% { box-shadow: 0 0 22px rgba(0,255,159,0.7); }
+}
+
+/* Freq queue chips (multiple play) */
+.chip.queued {
+  background: rgba(255,107,53,0.1);
+  border-color: rgba(255,107,53,0.4);
+  color: var(--glow3);
+}
+
+/* ── BACKGROUND MUSIC ── */
+#music-wrap {
+  max-width: 700px;
+  margin: 0 auto 16px;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+#music-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.15s;
+}
+
+#music-panel.music-playing {
+  border-color: rgba(255,107,53,0.5);
+  box-shadow: 0 0 14px rgba(255,107,53,0.1);
+}
+
+#music-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 16px;
+  cursor: pointer;
+  gap: 12px;
+}
+
+#music-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+#music-panel.music-playing #music-title {
+  color: var(--glow3);
+}
+
+#music-now {
+  font-size: 0.72rem;
+  color: var(--muted);
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-style: italic;
+}
+
+#music-toggle-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  font-family: 'Share Tech Mono', monospace;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+#music-panel:hover #music-toggle-btn { border-color: var(--glow3); color: var(--glow3); }
+
+#music-body {
+  display: none;
+  padding: 0 16px 14px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+#music-panel.open #music-body { display: flex; }
+
+#music-track-select {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  cursor: pointer;
+  outline: none;
+}
+#music-track-select:focus { border-color: var(--glow3); }
+
+#music-controls-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+#music-play-btn {
+  background: rgba(255,107,53,0.1);
+  border: 1px solid rgba(255,107,53,0.4);
+  border-radius: 8px;
+  color: var(--glow3);
+  cursor: pointer;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  padding: 9px 20px;
+  transition: all 0.15s;
+}
+#music-play-btn:hover { background: rgba(255,107,53,0.2); box-shadow: 0 0 12px rgba(255,107,53,0.3); }
+#music-play-btn.active { animation: pulse-btn 2s ease-in-out infinite; border-color: var(--glow3); }
+
+.opt-label-music {
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#music-vol-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 110px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+  flex: 1;
+  max-width: 160px;
+}
+#music-vol-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--glow3);
+  box-shadow: 0 0 8px rgba(255,107,53,0.6);
+  cursor: pointer;
+}
+
+#music-loop-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  padding: 6px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  transition: all 0.15s;
+}
+#music-loop-btn.active { border-color: var(--glow3); color: var(--glow3); }
+
+footer {
+  text-align: center;
+  font-size: 0.65rem;
+  color: var(--muted);
+  padding: 10px 20px 20px;
+  letter-spacing: 0.1em;
+  position: relative;
+  z-index: 1;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>⬡ RIFE FREQUENCY PLAYER</h1>
+  <p>Web Audio API · Sinuswelle · Kopfhörer empfohlen</p>
+</header>
+
+<div id="visualizer-wrap">
+  <canvas id="vis"></canvas>
+</div>
+
+<div id="now-playing">
+  <div id="np-name">— Kein Eintrag ausgewählt —</div>
+  <div id="np-freq">— Hz</div>
+  <div id="np-en"></div>
+</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="btn-prev" onclick="prevFreq()">◀ VORH.</button>
+  <button class="ctrl-btn primary" id="btn-play" onclick="togglePlay()">▶ PLAY</button>
+  <button class="ctrl-btn" id="btn-next" onclick="nextFreq()">NÄCHST. ▶</button>
+  <button class="ctrl-btn" id="btn-seq" onclick="toggleSequence()" title="Alle Frequenzen eines Eintrags nacheinander abspielen">SEQ: AUS</button>
+</div>
+
+<div id="options-row">
+  <span class="opt-label">Lautstärke</span>
+  <input type="range" id="vol-slider" min="0" max="1" step="0.01" value="0.5" oninput="setVolume(this.value)">
+
+  <span class="opt-label">Dauer</span>
+  <div id="dur-wrap">
+    <input type="range" id="dur-slider" min="5" max="300" step="5" value="30" oninput="updateDurLabel()">
+    <span id="dur-label">30s</span>
+  </div>
+
+  <span class="opt-label">Welle</span>
+  <select id="waveform" onchange="setWaveform(this.value)">
+    <option value="sine">Sinus</option>
+    <option value="square">Rechteck</option>
+    <option value="triangle">Dreieck</option>
+    <option value="sawtooth">Sägezahn</option>
+  </select>
+</div>
+
+<div id="music-wrap">
+  <div id="music-panel">
+    <div id="music-header" onclick="toggleMusicPanel()">
+      <span id="music-title">♫ HINTERGRUNDMUSIK</span>
+      <span id="music-now">— kein Track —</span>
+      <button id="music-toggle-btn">▼ ÖFFNEN</button>
+    </div>
+    <div id="music-body">
+      <select id="music-track-select" onchange="selectTrack(this.value)">
+        <option value="">— Track auswählen —</option>
+        <option value="Musik/Ancient Hum Field.mp3">Ancient Hum Field</option>
+        <option value="Musik/Ancient Hum Field (1).mp3">Ancient Hum Field (Extended)</option>
+        <option value="Musik/Hushstone Drift.mp3">Hushstone Drift</option>
+        <option value="Musik/Hushstone Drift (1).mp3">Hushstone Drift (Extended)</option>
+        <option value="Musik/Stone Bowl Drift.mp3">Stone Bowl Drift</option>
+        <option value="Musik/Stone Bowl Drift (1).mp3">Stone Bowl Drift (Extended)</option>
+        <option value="Musik/Stone Breath.mp3">Stone Breath</option>
+        <option value="Musik/Stone Breath (1).mp3">Stone Breath (Extended)</option>
+      </select>
+      <div id="music-controls-row">
+        <button id="music-play-btn" onclick="toggleMusic()">▶ PLAY</button>
+        <span class="opt-label-music">Lautstärke</span>
+        <input type="range" id="music-vol-slider" min="0" max="1" step="0.01" value="0.3" oninput="setMusicVolume(this.value)">
+        <button id="music-loop-btn" onclick="toggleMusicLoop()">⟳ LOOP: AN</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="search-wrap">
+  <input type="text" id="search" placeholder="Suche (z.B. Candida, Akne, 727…)" oninput="filterList()">
+</div>
+
+<div id="freq-list-wrap">
+  <div id="freq-count"></div>
+  <div id="freq-list"></div>
+</div>
+
+<footer>Kopfhörer empfohlen · Lautstärke schrittweise erhöhen · Web Audio API (kein Server erforderlich)</footer>
+
+<script>
+// ── DATA ──
+const DATA = [
+  {de:"Abzess",en:"Abscesses",f:"2720 2170 880 787 727 190 500"},
+  {de:"Adenexitis",en:"Adenexitis",f:"522 572 3343 3833 5312 440 441"},
+  {de:"Adrenalin-Erregung",en:"Adrenal stimulant",f:"20 3000 95 2720 2170 2127 2008 1800 1600 1550 1500 880 832 787 776 760 727 700 690 685 666 650 625 600 444 1865 125 95 72 20 522 450 440 428 660"},
+  {de:"Aflatoxin",en:"Aflatoxin",f:"344"},
+  {de:"AIDS",en:"AIDS (Acquired Immune Deficiency)",f:"5000 2489 880 787 727 3475 3375 3275 3175"},
+  {de:"Akne / Pickel",en:"Acne, Pimples",f:"2720 2170 1800 1600 1500 880 787 727"},
+  {de:"Akuter Schmerz",en:"Acute pain",f:"3000 95 10000 5000 1550 880 787 727 690 666"},
+  {de:"Alkoholismus",en:"Alcoholism",f:"727 787 880 10000"},
+  {de:"Allergie",en:"Allergy",f:"10000 880 787 727 3 330 5000"},
+  {de:"ALS",en:"ALS",f:"864 790 690 610 484 986 644 254"},
+  {de:"Anale Reizung / Jucken",en:"Anal itching",f:"10000 880 787 760 727 465 125 95 72 444 1865 20"},
+  {de:"Angina pectoris",en:"Angina pectoris",f:"230 2720 2170 1800 1600 1500 880 832 787 776 727 465 444 1865 125 95 72 20 660"},
+  {de:"Anhaftungen",en:"Adhesions",f:"5000 2720 2170 1550 880 787 776 760 727 190"},
+  {de:"Anthrax (Staphylokokkus)",en:"Anthrax",f:"727 787 880"},
+  {de:"Antiseptische Wirkung",en:"Antiseptic effect",f:"1550 880 787 760 727 465 444 450 428 660 5000"},
+  {de:"Appetitlosigkeit",en:"Appetite, lack of",f:"465 444 1865 125 95 72 20 10000 880 787 727"},
+  {de:"Arteriosklerose",en:"Arteriosclerosis",f:"10000 5000 2170 1800 1600 1500 880 787 776 727 20"},
+  {de:"Arthritis",en:"Arthritis",f:"10000 2489 1550 880 800 787 727 28 20"},
+  {de:"Arthritis – Muskeln, Sehnen",en:"Arthritis muscles and tendons",f:"250 650 625 600 10000 1550 880 787 727 28 20"},
+  {de:"Asthma",en:"Asthma",f:"2720 2170 1800 1600 1500 880 787 727 5000 1233 1283"},
+  {de:"Astrozytom",en:"Astrocytoma",f:"2170 2127 880 690 666 727 787 2008 2127"},
+  {de:"Aura-Aufbau",en:"Aura Builder",f:"20 5000 10000"},
+  {de:"Bacillinum",en:"Bacillinum",f:"132 854 921 1042 1932"},
+  {de:"Bakterielle Infektion",en:"Bacterial infections",f:"465 866 690 727 787 832 880 1550"},
+  {de:"Bakterien – Borrelie",en:"Borrelia",f:"254 644"},
+  {de:"Bandscheibenvorfall",en:"Disc herniated",f:"727 787 10000"},
+  {de:"Bauchentzündungen",en:"Abdominal inflammation",f:"380 2720 2489 2170 1800 1600 1550 880 832 787 776 727 465 444 1865 146 125 95 72 20 450 440 428 660"},
+  {de:"Bauchschmerzen",en:"Abdominal pain",f:"10000 5000 880 3000 95"},
+  {de:"Beckenprobleme",en:"Pelvic disorders",f:"20 60 660 727 787 880 660 1500"},
+  {de:"Beckenentzündung (PID)",en:"Pelvic inflammatory disease",f:"2720 2489 2170 2127 2008 1800 1600 1550 787 776 727 690 666 650 625 600 465 444 522 95 72 450 428"},
+  {de:"Bettnässen",en:"Bed wetting (enuresis)",f:"10000 5000 880 1550 787 727 465"},
+  {de:"Bettwundlage",en:"Bedsores",f:"880 1550 787 727 465 20 73"},
+  {de:"Beulenpest – sekundäre Infektion",en:"Bubonic plague",f:"5000 880 787 727 20"},
+  {de:"Blähungen",en:"Flatulence (gas)",f:"727 787 800 880 5000 1550 465"},
+  {de:"Blasenerkrankung",en:"Cystic Fibrosis",f:"660 727 778 787 880"},
+  {de:"Blasen- / Prostatabeschwerden",en:"Bladder and prostate complaints",f:"880 1550 787 727 465 20"},
+  {de:"Blutarmut",en:"Anemia",f:"5000"},
+  {de:"Bluthochdruck",en:"Blood Pressure, High",f:"727 787 880 5000 10000"},
+  {de:"Blutdruck, niedrig",en:"Blood Pressure, Low",f:"20 727 787 880"},
+  {de:"Blutplasmareiniger",en:"Blood plasma cleaner",f:"800"},
+  {de:"Blutterkrankungen",en:"Blood Diseases",f:"727 787 880 5000"},
+  {de:"Bronchitis",en:"Bronchitis",f:"880 727"},
+  {de:"Bronchialasthma",en:"Bronchial asthma",f:"522 146 125 95 72 444 522 20"},
+  {de:"Brustkrebs",en:"Breast Tumor",f:"727 787 880 5000 2008 2127"},
+  {de:"Brustzysten",en:"Breast, fibroid cysts",f:"880 1550 787 776 727 690 666"},
+  {de:"Candida Albicans",en:"Candida Albicans",f:"20 60 95 125 225 414 427 465 727 787 880"},
+  {de:"Candida-Pilz",en:"Candida",f:"465 880 787 727 95 125 20"},
+  {de:"Candida Karzinom",en:"Candida carcinomas",f:"2167 2182 465"},
+  {de:"Chlamydia",en:"Chlamydia",f:"430 620 624 840 2213"},
+  {de:"Cholera",en:"Cholera",f:"727 787 880 450 100 843 844"},
+  {de:"Chronische Erschöpfung",en:"Chronic Fatigue Syndrome",f:"10000 660 2127 787 465"},
+  {de:"Chronische Müdigkeit",en:"Chronic tired feeling",f:"727 787 880 10000"},
+  {de:"Depressionen (Drogen/Gifte)",en:"Depression due to drugs or toxins",f:"73"},
+  {de:"Depressionen (äußere Umstände)",en:"Depression due to outside circumstances",f:"35 787"},
+  {de:"Diabetes",en:"Diabetes",f:"35 787 10000 20 727 787 800 880 5000"},
+  {de:"Diabetes (sekundär)",en:"Diabetes secondary",f:"10000 2720 2170 1800 1550 880 727 465 20"},
+  {de:"Dickdarmkatarrh",en:"Colitis",f:"10000 1550 880 832 440"},
+  {de:"Diphtherie",en:"Diphtheria",f:"880 787 727 20 776 20"},
+  {de:"Drogenabhängigkeit",en:"Drug addiction",f:"20 727 787 880 5000"},
+  {de:"Durchblutungsstörungen",en:"Circulation disturbances",f:"40"},
+  {de:"Durchfall / Ruhr",en:"Diarrhea dysentery",f:"1550 880 787 727 465 5000"},
+  {de:"EBV (Epstein-Barr-Virus)",en:"EBV Epstein-Barr Virus",f:"660 663 669 428 776 778 465 880 787 727"},
+  {de:"Ekzem",en:"Eczema",f:"727 787 5000 1550"},
+  {de:"Epilepsie",en:"Epilepsy",f:"10000 880 787 727 700 650 600 125 20"},
+  {de:"Erfrierungen",en:"Frostbite",f:"727 787 880 5000"},
+  {de:"Erkältung, Grippe, Influenza",en:"Flu influenza",f:"880 800 787 727"},
+  {de:"Erholung von jedweder Erkrankung",en:"Recovery from ANY illness",f:"3000 95 190 47.5 2720 2489 1800 1600 1550 1500 880 832 787 776 727 666 650 600 465"},
+  {de:"Gallenblase",en:"Gall Bladder",f:"20 727 787 880 5000"},
+  {de:"Gallensteine",en:"Gall Stones",f:"3000 880 787 727 20 5000"},
+  {de:"Gallenzirrhose",en:"Biliary Cirrhosis",f:"381 514 677 2271"},
+  {de:"Gastritis und Blähungen",en:"Gastritis and flatus",f:"880 832 787 727 676 20"},
+  {de:"Gedächtnis",en:"Memory",f:"10000 20"},
+  {de:"Gelbsucht",en:"Jaundice",f:"1600 1550 1500 880 650 625 600 444 1865 146 250 125 95 72 20 727 787 5000"},
+  {de:"Gicht",en:"Gout",f:"3000 10000 880 787 727 20 5000 727 787 880"},
+  {de:"Gonorrhea",en:"Gonorrhea",f:"727 787 880 5000 660 600"},
+  {de:"Grippe (FLU)",en:"Grippe FLU",f:"727 787 880 343 512 862 3012 3423 10 223"},
+  {de:"Haarausfall",en:"Hair loss / Alopecia",f:"20 146 465 727 787 880 10000"},
+  {de:"Halsentzündung / Angina",en:"Angina",f:"787 776 727 465 428 660"},
+  {de:"Halsschmerzen",en:"Sore throat",f:"880 787 727"},
+  {de:"Harnblasenerkrankung (Zystitis)",en:"Cystitis",f:"5000 1550 880 800 787 727 465 20"},
+  {de:"Harnröhrenentzündung",en:"Urethritis",f:"2720 2170 2127 1800 1600 1550 1500 880 832 787 776 727 660 650 625 600 465 444 1865 125 95 72 660"},
+  {de:"Hautausschlag Erysipelas",en:"Erysipelas",f:"20 727 787 880 5000 600 2000"},
+  {de:"Hämatome",en:"Bruises",f:"727 787 880 10000"},
+  {de:"Hämorrhoiden",en:"Hemorrhoids Piles",f:"1550 880 727 800 447 20"},
+  {de:"Helicobacter Pylori",en:"Helicobacter Pylori",f:"676"},
+  {de:"Hepatitis – Leberentzündung",en:"Hepatitis Liver Inflammation",f:"28 1550 880 800 787 727 447 224 317 2189"},
+  {de:"Hepatitis A",en:"Hepatitis A",f:"321 3220"},
+  {de:"Herpes (Ekzem)",en:"Herpes Eczema",f:"727 787 5000 1550"},
+  {de:"Herpes (Zoster)",en:"Herpes Zoster",f:"2720 2170 1800 1600 1500 1550 1800 1865 880 787 727 20"},
+  {de:"Herpes Shingles",en:"Herpes Shingles",f:"20 727 787 880 1550 1800 1865"},
+  {de:"Herpes Simplex",en:"Herpes Simplex",f:"322 343 476 822 843 1043 1614 2062"},
+  {de:"Herpes simplex I (Mundfäule)",en:"Herpes simplex I",f:"1550"},
+  {de:"Herpes simplex II (Genital)",en:"Herpes simplex II",f:"1900 556 832"},
+  {de:"Herpes Zoster (Shingles)",en:"Herpes Zoster Shingles",f:"1557 574 1900 1550 727 787 880"},
+  {de:"Herz",en:"Heart",f:"20 162"},
+  {de:"Herzrhythmusstörungen",en:"Heart disorders",f:"727 787 880 5000"},
+  {de:"Herzbrennen",en:"Heartburn",f:"832 2720 2170 2127 1800 1600 1550 1500 880 787 727 685 465 444 1865 125 95 72 20"},
+  {de:"Heuschnupfen",en:"Hay Fever",f:"20 727 787 880 5000"},
+  {de:"HIV (AIDS-Virus)",en:"HIV AIDS virus",f:"683 3554 714"},
+  {de:"Hodenentzündung",en:"Gonad sex gland inflammation",f:"727 787 880 5000 10000"},
+  {de:"Hüftschmerzen",en:"Hip pain",f:"20 727 787 880 5000"},
+  {de:"Hypertonie – hoher Blutdruck",en:"Hypertension",f:"20 95 10000 880 787 727"},
+  {de:"Impotenz",en:"Impotence",f:"2127 2008 465 10000 880 787 727 690 666 125 95 73 72 20 650 625 600"},
+  {de:"Infektionen (verschiedene)",en:"Infections many classes",f:"1600 1550 1500 880 832 787 776 760 727 700 690 666 650 625 600 465 444 125 95 72 20 1865 500 450 440 428 660"},
+  {de:"Influenza",en:"Influenza",f:"20 727 787 800 880"},
+  {de:"Ischias",en:"Sciatica",f:"1550 880 787 727 690 666 10"},
+  {de:"Juckreiz",en:"Itching pruritis",f:"880 787 727 444 125 95 72 20 444 1865"},
+  {de:"Kaposis Sarkom",en:"Kaposis Sarcoma",f:"418 249"},
+  {de:"Karzinom",en:"Carcinoma",f:"2127 2008 880 787 727 666 690"},
+  {de:"Katarakt (nicht diabetisch)",en:"Cataract",f:"20 727 787 880 10000"},
+  {de:"Kniegelenkschmerzen",en:"Knee joint pain",f:"1550 880 787 727 28 20 250"},
+  {de:"Knochenentzündung eiternd",en:"Osteomyelitis",f:"2720 2489 2170 2127 2008 1800 1600 1550 1500 880 832 787 776 727 690 666 5000"},
+  {de:"Knochenerkrankungen",en:"Bone disease",f:"47 1800 1600 650 625 600 880 787 776 727"},
+  {de:"Kolik (Bauchschmerzen)",en:"Colic",f:"1550 832 787 727 20"},
+  {de:"Kopfschmerzen",en:"Headaches",f:"20 727 787 880 10000"},
+  {de:"Kopfschmerzen durch Vergiftung",en:"Headaches due to toxicity",f:"522 146 3000 880 787 727 20"},
+  {de:"Krämpfe",en:"Cramps",f:"10000 880 787 727 26 25 770 5000"},
+  {de:"Krebs",en:"Cancer",f:"663 727 778 787 880 1050 1550 2008 2050 2127"},
+  {de:"Lebervergrößerung",en:"Liver enlargement",f:"2489 880 787 727"},
+  {de:"Leukämie",en:"Leukemia",f:"2127 2008 880 787 727 690 666"},
+  {de:"Lungenentzündung",en:"Pneumonia",f:"1550 880 787 776 727 20 450 5000"},
+  {de:"Lupus",en:"Lupus",f:"243 352 386 921 942 993 1333 1464"},
+  {de:"Lymes disease",en:"Lymes disease",f:"432 2016 605 673 1455 797"},
+  {de:"Lymphdrüsen",en:"Lymph glands",f:"10 440 727 787 880 5000"},
+  {de:"Lymphstau",en:"Lymph stasis",f:"148 522 146 444 440 880 787 727"},
+  {de:"Magenkrämpfe",en:"Stomach cramps",f:"20 727 787 880 10000"},
+  {de:"Magengeschwür",en:"Peptic Ulcers",f:"880 787 776 727"},
+  {de:"Malaria",en:"Malaria",f:"222 550 713 930 1032 1433 20"},
+  {de:"Masern",en:"Measles",f:"467 520 1489 727 787 880"},
+  {de:"Meniere Krankheit",en:"Menieres disease",f:"1550 880 787 727 465 428"},
+  {de:"Menstruationsstörungen",en:"Menstrual problems",f:"880 1550 787 727 465 20"},
+  {de:"Menstruationskrämpfe",en:"Cramps menstrual",f:"26"},
+  {de:"Migräne",en:"Migraine",f:"5000 20 10 727 787 880 5000"},
+  {de:"Morbus Crohn",en:"Crohns disease",f:"727"},
+  {de:"Morbus Parkinson",en:"Morbus Parkinson",f:"813"},
+  {de:"Multiple Sklerose",en:"Multiple sclerosis MS",f:"20 727 787 880 5000"},
+  {de:"Mumps",en:"Mumps",f:"10000 727 2720 2489 2127 2008 428 880 787 727 20 242 516 642 922 2630 3142"},
+  {de:"Müdigkeit",en:"Fatigue",f:"428 660 465 125 95 72 20 444 1865"},
+  {de:"Muskeldystrophie",en:"Muscular Dystrophy",f:"153 5000 522 146 880 787 727"},
+  {de:"Muskelschmerzen",en:"Muscular pain injury",f:"320 250 240 160 125 80 40 20"},
+  {de:"Nagel Mykose",en:"Nail Mycosis",f:"462 654"},
+  {de:"Nebenhöhlenentzündung",en:"Sinusitis",f:"1550 880 787 727 125 72 522"},
+  {de:"Nervenstörung",en:"Nerve disorders",f:"10000 2720 2489 2170 1800 1600 1550 880 787 727 650 625 600 125 95 72 20 440 660"},
+  {de:"Nieren",en:"Kidney",f:"20 727 787 880 5000 800 20 10000"},
+  {de:"Nierenentzündung",en:"Nephritis",f:"20 727 787 800 880 10000"},
+  {de:"Ohrenklingeln / Tinnitus",en:"Tinnitus ringing in ears",f:"20 727 787 880"},
+  {de:"Ovarian disorders",en:"Ovarian disorders",f:"650 625 600 465 444 26 2720 2489 2170 2127 2008 1800 1600 1550 1500 880 832 787 776 727 690 666 20"},
+  {de:"Parasiten",en:"Parasites",f:"20 60 727 787 800 880 120 125 95 72 440 444 1865"},
+  {de:"Parodontose",en:"Parodontose",f:"1552"},
+  {de:"Pilzinfektion",en:"Fungal infection",f:"465 1550 880 727 20"},
+  {de:"Prostatitis (gutartig)",en:"Prostatitis benign",f:"100 410 522 146 2720 2489 2170 2127 2008 1550 787 776 727 690 666 465 125 95 72 20 444 522"},
+  {de:"Prostatatumor (bösartig)",en:"Prostate tumor malignant",f:"2127 2008 727 690 666"},
+  {de:"Röteln",en:"Rubella German measles",f:"727 787 880 20 517 431"},
+  {de:"Rückenschmerzen",en:"Backache",f:"760 1550 880 787 727 10000"},
+  {de:"Sarkom",en:"Sarcoma",f:"2127 2008 880 787 727 690 666"},
+  {de:"Scharlach",en:"Scarlet fever",f:"880 787 727 690 666 20"},
+  {de:"Schlaflosigkeit",en:"Insomnia",f:"1550 1500 880 10 727 787 880 10000"},
+  {de:"Schlaganfall / Lähmung",en:"Stroke paralysis",f:"20 40 1800 880 787 727 650 625 600 125 95 72 1865 522 428"},
+  {de:"Schuppenflechte",en:"Psoriasis",f:"110 100 60"},
+  {de:"Selbstvergiftung",en:"Autointoxication",f:"522 146 10000 880 787 727 20"},
+  {de:"Sinusitis",en:"Sinusitis",f:"1550 880 787 727 125 72 522"},
+  {de:"Staphylokokken Infektion",en:"Staphyloccus infections",f:"20 727 800 725 726 728 729 730"},
+  {de:"Sterilität",en:"Sterility",f:"5000 10000 2008 2127"},
+  {de:"Tetanus",en:"Tetanus",f:"727 787 880 600 554"},
+  {de:"Thrombose",en:"Thrombosis",f:"5000 800 20"},
+  {de:"Tinnitus (Ohrensausen)",en:"Tinnitus ringing in ears",f:"20 727 787 880"},
+  {de:"Toxoplasmose",en:"Toxoplasmosis",f:"434 852"},
+  {de:"Trigeminusneuralgie",en:"Trigeminal neuralgia",f:"2720 2489 2170 1800 1600 1550 880 832 787 776 760 727 650 146 27 428"},
+  {de:"Tuberkulose",en:"Tuberculosis",f:"1550 800 20"},
+  {de:"Tumor alle Arten",en:"Tumors any kind",f:"2127"},
+  {de:"Typhus",en:"Typhoid",f:"1550 690 1800"},
+  {de:"Übelkeit",en:"Nausea",f:"727 787 880 5000 832 20"},
+  {de:"Unfruchtbarkeit",en:"Infertility",f:"2127 2008 465 880 787 727 690 666 650 625 600"},
+  {de:"Unterfunktion Schilddrüse",en:"Hypothyroid",f:"12 35"},
+  {de:"Verdauungsstörung",en:"Indigestion",f:"10000 880 787 727 465 444 20 125 95 72 5000"},
+  {de:"Vergiftung",en:"Intoxication",f:"10000"},
+  {de:"Verstopfung",en:"Constipation",f:"1550 880 800 787 776 727 20"},
+  {de:"Warzen",en:"Warts",f:"2720 2489 2170 2127 2008 1800 1600 1500 727 690 666 495 787"},
+  {de:"Wirbelsäulenschaden",en:"Whiplash",f:"20 10000"},
+  {de:"Wirbelentzündung / -versteifung",en:"Ankylosing spondylitis",f:"3000 95 1550 880 787 776 727 650 625 600 28 35 28 110 100 60 428 680"},
+  {de:"Wundheilung",en:"Wound healing",f:"880 787 727 220 190 20"},
+  {de:"Würmer",en:"Worms",f:"125 95 72 20 444 1865"},
+  {de:"Würmer – Bandwürmer",en:"Worms Tape",f:"522 562 843 1223 3032 5522"},
+  {de:"Zahnfleischentzündung",en:"Gingivitis pyorrhea",f:"5000 880 800 787 727 465 20"},
+  {de:"Zahnschmerzen",en:"Toothache",f:"727 787 800 880 5000"},
+  {de:"Zytomegalovirus (CMV)",en:"CMV",f:"2145"},
+  {de:"Allgemeines Programm",en:"General Program",f:"20 60 95 125 225 427 440 660 727 787 800 880 5000 10000"},
+];
+
+DATA.sort((a,b) => a.de.localeCompare(b.de,'de'));
+
+// ── AUDIO ENGINE ──
+let audioCtx = null;
+let oscillator = null;
+let gainNode = null;
+let analyser = null;
+let currentFreqHz = null;
+let currentEntry = null;
+let currentChipIndex = 0;
+let sequenceMode = false;
+let seqTimer = null;
+let waveType = 'sine';
+let volume = 0.5;
+let duration = 30;
+
+function getAudioCtx() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.connect(audioCtx.destination);
+  }
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function stopTone() {
+  if (oscillator) {
+    try { oscillator.stop(); } catch(e){}
+    oscillator.disconnect();
+    oscillator = null;
+  }
+  if (gainNode) {
+    gainNode.disconnect();
+    gainNode = null;
+  }
+  clearTimeout(seqTimer);
+  document.getElementById('btn-play').textContent = '▶ PLAY';
+  document.getElementById('btn-play').classList.remove('playing');
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('playing-chip'));
+}
+
+function playFreq(hz, entryObj, chipIdx) {
+  stopTone();
+  const ctx = getAudioCtx();
+
+  // parse hz — skip non-numeric tokens
+  const parsed = parseFloat(hz);
+  if (isNaN(parsed) || parsed <= 0) return;
+
+  // clamp to audible range 1–20000 Hz
+  const clamped = Math.min(Math.max(parsed, 1), 20000);
+
+  gainNode = ctx.createGain();
+  gainNode.gain.setValueAtTime(0, ctx.currentTime);
+  gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.05);
+  gainNode.connect(analyser);
+
+  oscillator = ctx.createOscillator();
+  oscillator.type = waveType;
+  oscillator.frequency.setValueAtTime(clamped, ctx.currentTime);
+  oscillator.connect(gainNode);
+  oscillator.start();
+
+  currentFreqHz = clamped;
+  currentEntry = entryObj;
+  currentChipIndex = chipIdx;
+
+  // Update UI
+  document.getElementById('np-name').textContent = entryObj.de;
+  document.getElementById('np-en').textContent = entryObj.en;
+  document.getElementById('np-freq').textContent = clamped % 1 === 0 ? clamped + ' Hz' : clamped.toFixed(1) + ' Hz';
+
+  const btn = document.getElementById('btn-play');
+  btn.textContent = '⏹ STOP';
+  btn.classList.add('playing');
+
+  // Highlight chip
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('playing-chip'));
+  const chips = document.querySelectorAll(`.chip[data-entry-idx="${DATA.indexOf(entryObj)}"]`);
+  if (chips[chipIdx]) chips[chipIdx].classList.add('playing-chip');
+
+  // Highlight entry
+  document.querySelectorAll('.freq-entry').forEach(e => e.classList.remove('active-entry'));
+  const entryEl = document.getElementById(`entry-${DATA.indexOf(entryObj)}`);
+  if (entryEl) {
+    entryEl.classList.add('active-entry');
+    if (!entryEl.classList.contains('open')) {
+      entryEl.classList.add('open');
+      entryEl.querySelector('.entry-toggle').textContent = '▲ FREQ';
+    }
+    entryEl.scrollIntoView({behavior:'smooth', block:'nearest'});
+  }
+
+  // Auto-stop after duration (or sequence next)
+  if (sequenceMode) {
+    const tokens = getNumericTokens(entryObj.f);
+    seqTimer = setTimeout(() => {
+      const nextIdx = chipIdx + 1;
+      if (nextIdx < tokens.length) {
+        playFreq(tokens[nextIdx], entryObj, nextIdx);
+      } else {
+        stopTone();
+      }
+    }, duration * 1000);
+  } else {
+    seqTimer = setTimeout(stopTone, duration * 1000);
+  }
+}
+
+function getNumericTokens(fStr) {
+  return fStr.split(/\s+/).filter(t => !isNaN(parseFloat(t)) && parseFloat(t) > 0);
+}
+
+function togglePlay() {
+  if (oscillator) { stopTone(); return; }
+  if (!currentEntry) return;
+  const tokens = getNumericTokens(currentEntry.f);
+  if (tokens.length > 0) playFreq(tokens[currentChipIndex] || tokens[0], currentEntry, currentChipIndex || 0);
+}
+
+function prevFreq() {
+  if (!currentEntry) return;
+  const tokens = getNumericTokens(currentEntry.f);
+  const idx = Math.max(0, currentChipIndex - 1);
+  playFreq(tokens[idx], currentEntry, idx);
+}
+
+function nextFreq() {
+  if (!currentEntry) return;
+  const tokens = getNumericTokens(currentEntry.f);
+  const idx = Math.min(tokens.length - 1, currentChipIndex + 1);
+  playFreq(tokens[idx], currentEntry, idx);
+}
+
+function toggleSequence() {
+  sequenceMode = !sequenceMode;
+  const btn = document.getElementById('btn-seq');
+  btn.textContent = sequenceMode ? 'SEQ: AN' : 'SEQ: AUS';
+  btn.style.borderColor = sequenceMode ? 'var(--glow2)' : '';
+  btn.style.color = sequenceMode ? 'var(--glow2)' : '';
+}
+
+function setVolume(v) {
+  volume = parseFloat(v);
+  if (gainNode) gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
+}
+
+function setWaveform(v) {
+  waveType = v;
+  if (oscillator) oscillator.type = v;
+}
+
+function updateDurLabel() {
+  duration = parseInt(document.getElementById('dur-slider').value);
+  document.getElementById('dur-label').textContent = duration + 's';
+}
+
+// ── VISUALIZER ──
+const canvas = document.getElementById('vis');
+const ctx2 = canvas.getContext('2d');
+
+function drawVis() {
+  requestAnimationFrame(drawVis);
+  const W = canvas.offsetWidth * devicePixelRatio;
+  const H = canvas.offsetHeight * devicePixelRatio;
+  canvas.width = W;
+  canvas.height = H;
+  ctx2.clearRect(0,0,W,H);
+
+  if (!analyser || !oscillator) {
+    // Idle flat line
+    ctx2.strokeStyle = 'rgba(0,212,255,0.15)';
+    ctx2.lineWidth = 1;
+    ctx2.beginPath();
+    ctx2.moveTo(0, H/2);
+    ctx2.lineTo(W, H/2);
+    ctx2.stroke();
+    return;
+  }
+
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(buf);
+
+  ctx2.strokeStyle = '#00d4ff';
+  ctx2.lineWidth = 2 * devicePixelRatio;
+  ctx2.shadowColor = '#00d4ff';
+  ctx2.shadowBlur = 8;
+  ctx2.beginPath();
+  const sliceW = W / buf.length;
+  let x = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const v = buf[i] / 128.0;
+    const y = (v * H) / 2;
+    i === 0 ? ctx2.moveTo(x, y) : ctx2.lineTo(x, y);
+    x += sliceW;
+  }
+  ctx2.stroke();
+}
+drawVis();
+
+// ── LIST BUILDER ──
+function buildList(data) {
+  const list = document.getElementById('freq-list');
+  list.innerHTML = '';
+  document.getElementById('freq-count').textContent = `${data.length} Einträge`;
+
+  data.forEach((item) => {
+    const globalIdx = DATA.indexOf(item);
+    const tokens = getNumericTokens(item.f);
+
+    const entry = document.createElement('div');
+    entry.className = 'freq-entry';
+    entry.id = `entry-${globalIdx}`;
+
+    const header = document.createElement('div');
+    header.className = 'entry-header';
+    header.innerHTML = `
+      <div class="entry-name">${item.de}</div>
+      <div class="entry-en">${item.en}</div>
+      <button class="entry-toggle">▼ FREQ</button>
+    `;
+    header.querySelector('.entry-toggle').onclick = (e) => {
+      e.stopPropagation();
+      entry.classList.toggle('open');
+      header.querySelector('.entry-toggle').textContent = entry.classList.contains('open') ? '▲ FREQ' : '▼ FREQ';
+    };
+    header.onclick = () => {
+      entry.classList.toggle('open');
+      header.querySelector('.entry-toggle').textContent = entry.classList.contains('open') ? '▲ FREQ' : '▼ FREQ';
+    };
+
+    const chips = document.createElement('div');
+    chips.className = 'freq-chips';
+    tokens.forEach((tok, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.dataset.entryIdx = globalIdx;
+      chip.textContent = tok + ' Hz';
+      chip.onclick = (e) => {
+        e.stopPropagation();
+        playFreq(tok, item, i);
+      };
+      chips.appendChild(chip);
+    });
+
+    entry.appendChild(header);
+    entry.appendChild(chips);
+    list.appendChild(entry);
+  });
+}
+
+function filterList() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const filtered = q
+    ? DATA.filter(d => d.de.toLowerCase().includes(q) || d.en.toLowerCase().includes(q) || d.f.includes(q))
+    : DATA;
+  buildList(filtered);
+}
+
+buildList(DATA);
+
+// ── BACKGROUND MUSIC ──
+const bgAudio = new Audio();
+bgAudio.loop = true;
+bgAudio.volume = 0.3;
+let musicLoopEnabled = true;
+
+function toggleMusicPanel() {
+  const panel = document.getElementById('music-panel');
+  const btn = document.getElementById('music-toggle-btn');
+  panel.classList.toggle('open');
+  btn.textContent = panel.classList.contains('open') ? '▲ SCHLIESSEN' : '▼ ÖFFNEN';
+}
+
+function selectTrack(src) {
+  const wasPlaying = !bgAudio.paused;
+  bgAudio.src = src;
+  document.getElementById('music-now').textContent = src
+    ? document.getElementById('music-track-select').options[document.getElementById('music-track-select').selectedIndex].text
+    : '— kein Track —';
+  if (wasPlaying && src) bgAudio.play();
+}
+
+function toggleMusic() {
+  const btn = document.getElementById('music-play-btn');
+  const panel = document.getElementById('music-panel');
+  if (!bgAudio.src || bgAudio.src === window.location.href) return;
+  if (bgAudio.paused) {
+    bgAudio.play();
+    btn.textContent = '⏸ PAUSE';
+    btn.classList.add('active');
+    panel.classList.add('music-playing');
+  } else {
+    bgAudio.pause();
+    btn.textContent = '▶ PLAY';
+    btn.classList.remove('active');
+    panel.classList.remove('music-playing');
+  }
+}
+
+function setMusicVolume(v) {
+  bgAudio.volume = parseFloat(v);
+}
+
+function toggleMusicLoop() {
+  musicLoopEnabled = !musicLoopEnabled;
+  bgAudio.loop = musicLoopEnabled;
+  const btn = document.getElementById('music-loop-btn');
+  btn.textContent = musicLoopEnabled ? '⟳ LOOP: AN' : '⟳ LOOP: AUS';
+  btn.classList.toggle('active', musicLoopEnabled);
+}
+
+bgAudio.addEventListener('ended', () => {
+  if (!musicLoopEnabled) {
+    document.getElementById('music-play-btn').textContent = '▶ PLAY';
+    document.getElementById('music-play-btn').classList.remove('active');
+    document.getElementById('music-panel').classList.remove('music-playing');
+  }
+});
+</script>
+</body>
+</html>
