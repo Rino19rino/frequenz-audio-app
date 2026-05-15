@@ -359,9 +359,10 @@ select.pp-sel:focus{border-color:var(--primary);}
         <option value="Musik/Stone Breath.mp3">Stone Breath</option>
         <option value="Musik/Stone Breath (1).mp3">Stone Breath II</option>
       </select>
+      <audio id="bg-audio-el" loop preload="none" style="display:none"></audio>
       <div id="music-ctrl-row">
         <button id="music-play-btn" onclick="toggleMusic()">▶ Play</button>
-        <input type="range" id="music-vol" min="0" max="1" step="0.01" value="0.4" oninput="bgAudio.volume=parseFloat(this.value)">
+        <input type="range" id="music-vol" min="0" max="1" step="0.01" value="0.4">
         <div id="music-loop-row">
           <input type="checkbox" id="music-loop" checked>
           <label for="music-loop">Loop</label>
@@ -815,7 +816,7 @@ drawVis();
 // ════════════════════════════════════
 // MUSIC
 // ════════════════════════════════════
-const bgAudio=new Audio();
+const bgAudio=document.getElementById('bg-audio-el');
 bgAudio.loop=true;bgAudio.volume=0.4;
 let musicPlaying=false;
 
@@ -828,48 +829,43 @@ bgAudio.onerror=function(){
   musicPlaying=false;
   updateMusicBtn();
   const codes={1:'Laden abgebrochen',2:'Netzwerkfehler',3:'Dekodierungsfehler',4:'Format nicht unterstützt'};
-  setMusicStatus('⚠ Fehler: '+(codes[bgAudio.error?.code]||'Unbekannter Fehler'));
+  setMusicStatus('⚠ Fehler: '+(codes[bgAudio.error?.code]||'Unbekannt'));
 };
 bgAudio.onended=function(){
   if(!bgAudio.loop){musicPlaying=false;updateMusicBtn();}
 };
+bgAudio.onplay=function(){musicPlaying=true;updateMusicBtn();};
+bgAudio.onpause=function(){musicPlaying=false;updateMusicBtn();};
 
 function selectTrack(file){
-  const was=musicPlaying;
   bgAudio.pause();
   musicPlaying=false;
-  if(!file){bgAudio.src='';setMusicStatus('– kein Track geladen –');updateMusicBtn();return;}
+  if(!file){bgAudio.removeAttribute('src');bgAudio.load();setMusicStatus('– kein Track geladen –');updateMusicBtn();return;}
   bgAudio.src=file;
   bgAudio.load();
   setMusicStatus(file.split('/').pop().replace(/\.mp3$/i,''));
-  if(was){
-    bgAudio.play().then(()=>{musicPlaying=true;updateMusicBtn();}).catch(e=>{setMusicStatus('⚠ '+e.message);updateMusicBtn();});
-  } else {
-    updateMusicBtn();
-  }
+  updateMusicBtn();
 }
 function toggleMusic(){
   const file=document.getElementById('music-track-sel').value;
   if(!file){alert('Bitte zuerst einen Musiktrack auswählen.');return;}
-  if(!bgAudio.src||bgAudio.paused&&bgAudio.currentTime===0)bgAudio.src=file;
-  if(musicPlaying){
-    bgAudio.pause();musicPlaying=false;updateMusicBtn();
+  if(!bgAudio.getAttribute('src'))bgAudio.src=file;
+  if(!bgAudio.paused){
+    bgAudio.pause();
   } else {
     bgAudio.loop=document.getElementById('music-loop').checked;
-    bgAudio.play()
-      .then(()=>{musicPlaying=true;updateMusicBtn();})
-      .catch(e=>{setMusicStatus('⚠ '+e.message);musicPlaying=false;updateMusicBtn();});
+    bgAudio.play().catch(e=>{setMusicStatus('⚠ '+e.message);});
   }
 }
 function startMusic(){
   const file=document.getElementById('music-track-sel').value;
-  if(!file||musicPlaying)return;
-  if(!bgAudio.src)bgAudio.src=file;
+  if(!file||!bgAudio.paused)return;
+  if(!bgAudio.getAttribute('src'))bgAudio.src=file;
   bgAudio.loop=document.getElementById('music-loop').checked;
-  bgAudio.play().then(()=>{musicPlaying=true;updateMusicBtn();}).catch(()=>{});
+  bgAudio.play().catch(()=>{});
 }
 function stopMusic(){
-  bgAudio.pause();bgAudio.currentTime=0;musicPlaying=false;updateMusicBtn();
+  bgAudio.pause();bgAudio.currentTime=0;
 }
 function updateMusicBtn(){
   const btn=document.getElementById('music-play-btn');
@@ -878,6 +874,7 @@ function updateMusicBtn(){
   btn.classList.toggle('music-active',musicPlaying);
 }
 document.getElementById('music-loop').onchange=function(){bgAudio.loop=this.checked;};
+document.getElementById('music-vol').oninput=function(){bgAudio.volume=parseFloat(this.value);};
 
 // ════════════════════════════════════
 // CLIENT STORE
