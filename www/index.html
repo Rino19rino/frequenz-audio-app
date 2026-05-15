@@ -257,6 +257,44 @@ canvas#vis {
   cursor: pointer;
 }
 
+/* Countdown Timer */
+#countdown-display {
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--glow);
+  min-width: 3.5em;
+  text-align: right;
+  letter-spacing: 0.05em;
+  transition: color 0.3s;
+}
+#countdown-display.warn { color: var(--glow2); }
+#countdown-display.urgent { color: var(--glow3); animation: pulse-btn 0.8s ease-in-out infinite; }
+
+/* Sequenz-Button in Eintrag */
+.entry-play-all {
+  background: rgba(0,255,159,0.08);
+  border: 1px solid rgba(0,255,159,0.35);
+  border-radius: 5px;
+  color: var(--glow2);
+  cursor: pointer;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  padding: 4px 9px;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.entry-play-all:hover {
+  background: rgba(0,255,159,0.2);
+  box-shadow: 0 0 10px rgba(0,255,159,0.3);
+}
+.entry-play-all.running {
+  background: rgba(0,255,159,0.2);
+  border-color: var(--glow2);
+  animation: pulse-btn 1.5s ease-in-out infinite;
+}
+
 /* Waveform select */
 select#waveform {
   background: var(--card);
@@ -863,8 +901,9 @@ footer {
 
   <span class="opt-label">Dauer</span>
   <div id="dur-wrap">
-    <input type="range" id="dur-slider" min="5" max="300" step="5" value="30" oninput="updateDurLabel()">
-    <span id="dur-label">30s</span>
+    <input type="range" id="dur-slider" min="20" max="600" step="10" value="60" oninput="updateDurLabel()">
+    <span id="dur-label">1:00</span>
+    <span id="countdown-display"></span>
   </div>
 
   <span class="opt-label">Welle</span>
@@ -1173,9 +1212,11 @@ let currentEntry = null;
 let currentChipIndex = 0;
 let sequenceMode = false;
 let seqTimer = null;
+let countdownInterval = null;
+let activeSeqEntry = null;
 let waveType = 'sine';
 let volume = 0.5;
-let duration = 30;
+let duration = 60;
 
 function getAudioCtx() {
   if (!audioCtx) {
@@ -1199,9 +1240,32 @@ function stopTone() {
     gainNode = null;
   }
   clearTimeout(seqTimer);
+  clearInterval(countdownInterval);
+  countdownInterval = null;
+  activeSeqEntry = null;
   document.getElementById('btn-play').textContent = '▶ PLAY';
   document.getElementById('btn-play').classList.remove('playing');
   document.querySelectorAll('.chip').forEach(c => c.classList.remove('playing-chip'));
+  document.querySelectorAll('.entry-play-all').forEach(b => b.classList.remove('running'));
+  const cd = document.getElementById('countdown-display');
+  if (cd) { cd.textContent = ''; cd.className = ''; }
+}
+
+function startCountdown(seconds) {
+  clearInterval(countdownInterval);
+  let remaining = seconds;
+  const cd = document.getElementById('countdown-display');
+  function tick() {
+    if (!cd) return;
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    cd.textContent = m > 0 ? m + ':' + String(s).padStart(2,'0') : s + 's';
+    cd.className = remaining <= 10 ? 'urgent' : remaining <= 30 ? 'warn' : '';
+    remaining--;
+    if (remaining < 0) clearInterval(countdownInterval);
+  }
+  tick();
+  countdownInterval = setInterval(tick, 1000);
 }
 
 function playFreq(hz, entryObj, chipIdx) {
@@ -1256,6 +1320,9 @@ function playFreq(hz, entryObj, chipIdx) {
     }
     entryEl.scrollIntoView({behavior:'smooth', block:'nearest'});
   }
+
+  // Countdown starten
+  startCountdown(duration);
 
   // Auto-stop after duration (or sequence next)
   if (sequenceMode) {
@@ -1318,8 +1385,11 @@ function setWaveform(v) {
 
 function updateDurLabel() {
   duration = parseInt(document.getElementById('dur-slider').value);
-  document.getElementById('dur-label').textContent = duration + 's';
+  const m = Math.floor(duration / 60);
+  const s = duration % 60;
+  document.getElementById('dur-label').textContent = m > 0 ? m + ':' + String(s).padStart(2,'0') : s + 's';
 }
+updateDurLabel();
 
 // ── VISUALIZER ──
 const canvas = document.getElementById('vis');
@@ -1383,8 +1453,13 @@ function buildList(data) {
     header.innerHTML = `
       <div class="entry-name">${item.de}</div>
       <div class="entry-en">${item.en}</div>
+      <button class="entry-play-all" title="Alle Frequenzen nacheinander abspielen">▶ ALLE</button>
       <button class="entry-toggle">▼ FREQ</button>
     `;
+    header.querySelector('.entry-play-all').onclick = (e) => {
+      e.stopPropagation();
+      playAllFreqs(item, globalIdx);
+    };
     header.querySelector('.entry-toggle').onclick = (e) => {
       e.stopPropagation();
       entry.classList.toggle('open');
@@ -1424,6 +1499,60 @@ function filterList() {
 }
 
 buildList(DATA);
+
+// ── ALLE FREQUENZEN SEQUENZIELL ABSPIELEN ──
+function playAllFreqs(entryObj, entryGlobalIdx) {
+  const tokens = getNumericTokens(entryObj.f);
+  if (!tokens.length) return;
+
+  stopTone();
+  activeSeqEntry = entryGlobalIdx;
+
+  // Eintrag öffnen
+  const entryEl = document.getElementById('entry-' + entryGlobalIdx);
+  if (entryEl) {
+    entryEl.classList.add('open');
+    const tog = entryEl.querySelector('.entry-toggle');
+    if (tog) tog.textContent = '▲ FREQ';
+    const btn = entryEl.querySelector('.entry-play-all');
+    if (btn) btn.classList.add('running');
+    entryEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Musik starten falls nicht läuft
+  if (bgAudio && bgAudio.src && bgAudio.src !== window.location.href) {
+    bgAudio.loop = true;
+    if (bgAudio.paused) {
+      bgAudio.play().catch(()=>{});
+      const pb = document.getElementById('music-play-btn');
+      if (pb) { pb.textContent = '⏸ PAUSE'; pb.classList.add('active'); }
+      const mp = document.getElementById('music-panel');
+      if (mp) mp.classList.add('music-playing');
+    }
+  }
+
+  let idx = 0;
+  function playNext() {
+    if (idx >= tokens.length || activeSeqEntry !== entryGlobalIdx) {
+      // Sequenz abgeschlossen → Musik stoppen
+      if (bgAudio && !bgAudio.paused) {
+        bgAudio.pause();
+        bgAudio.currentTime = 0;
+        const pb = document.getElementById('music-play-btn');
+        if (pb) { pb.textContent = '▶ PLAY'; pb.classList.remove('active'); }
+        const mp = document.getElementById('music-panel');
+        if (mp) mp.classList.remove('music-playing');
+      }
+      stopTone();
+      return;
+    }
+    playFreq(tokens[idx], entryObj, idx);
+    idx++;
+    clearTimeout(seqTimer);
+    seqTimer = setTimeout(playNext, duration * 1000);
+  }
+  playNext();
+}
 
 // ── CLIENT MANAGEMENT ──
 function openClientModal() {
