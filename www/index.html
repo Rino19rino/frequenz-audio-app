@@ -819,34 +819,61 @@ const bgAudio=new Audio();
 bgAudio.loop=true;bgAudio.volume=0.4;
 let musicPlaying=false;
 
+function setMusicStatus(txt){
+  const el=document.getElementById('music-now');
+  if(el)el.textContent=txt;
+}
+
+bgAudio.onerror=function(){
+  musicPlaying=false;
+  updateMusicBtn();
+  const codes={1:'Laden abgebrochen',2:'Netzwerkfehler',3:'Dekodierungsfehler',4:'Format nicht unterstützt'};
+  setMusicStatus('⚠ Fehler: '+(codes[bgAudio.error?.code]||'Unbekannter Fehler'));
+};
+bgAudio.onended=function(){
+  if(!bgAudio.loop){musicPlaying=false;updateMusicBtn();}
+};
+
 function selectTrack(file){
   const was=musicPlaying;
-  if(musicPlaying){bgAudio.pause();musicPlaying=false;}
-  bgAudio.src=file||'';
-  document.getElementById('music-now').textContent=file?file.split('/').pop().replace('.mp3',''):'– kein Track geladen –';
-  if(was&&file){bgAudio.play().catch(()=>{});musicPlaying=true;}
-  updateMusicBtn();
+  bgAudio.pause();
+  musicPlaying=false;
+  if(!file){bgAudio.src='';setMusicStatus('– kein Track geladen –');updateMusicBtn();return;}
+  bgAudio.src=file;
+  bgAudio.load();
+  setMusicStatus(file.split('/').pop().replace(/\.mp3$/i,''));
+  if(was){
+    bgAudio.play().then(()=>{musicPlaying=true;updateMusicBtn();}).catch(e=>{setMusicStatus('⚠ '+e.message);updateMusicBtn();});
+  } else {
+    updateMusicBtn();
+  }
 }
 function toggleMusic(){
   const file=document.getElementById('music-track-sel').value;
   if(!file){alert('Bitte zuerst einen Musiktrack auswählen.');return;}
-  if(!bgAudio.src||bgAudio.src===window.location.href)bgAudio.src=file;
-  if(musicPlaying){bgAudio.pause();musicPlaying=false;}
-  else{bgAudio.loop=document.getElementById('music-loop').checked;bgAudio.play().catch(e=>console.warn(e));musicPlaying=true;}
-  updateMusicBtn();
+  if(!bgAudio.src||bgAudio.paused&&bgAudio.currentTime===0)bgAudio.src=file;
+  if(musicPlaying){
+    bgAudio.pause();musicPlaying=false;updateMusicBtn();
+  } else {
+    bgAudio.loop=document.getElementById('music-loop').checked;
+    bgAudio.play()
+      .then(()=>{musicPlaying=true;updateMusicBtn();})
+      .catch(e=>{setMusicStatus('⚠ '+e.message);musicPlaying=false;updateMusicBtn();});
+  }
 }
 function startMusic(){
   const file=document.getElementById('music-track-sel').value;
   if(!file||musicPlaying)return;
-  if(!bgAudio.src||bgAudio.src===window.location.href)bgAudio.src=file;
+  if(!bgAudio.src)bgAudio.src=file;
   bgAudio.loop=document.getElementById('music-loop').checked;
-  bgAudio.play().catch(()=>{});musicPlaying=true;updateMusicBtn();
+  bgAudio.play().then(()=>{musicPlaying=true;updateMusicBtn();}).catch(()=>{});
 }
 function stopMusic(){
   bgAudio.pause();bgAudio.currentTime=0;musicPlaying=false;updateMusicBtn();
 }
 function updateMusicBtn(){
   const btn=document.getElementById('music-play-btn');
+  if(!btn)return;
   btn.textContent=musicPlaying?'⏸ Pause':'▶ Play';
   btn.classList.toggle('music-active',musicPlaying);
 }
