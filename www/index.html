@@ -650,7 +650,9 @@ function stopTone(stopMusicToo){
 }
 
 function playFreq(hz,entry,chipIdx,dur){
+  const savedSeqIdx=activeSeqEIdx;
   stopTone(false);
+  activeSeqEIdx=savedSeqIdx;
   const ctx=getCtx();
   const parsed=parseFloat(hz);
   if(isNaN(parsed)||parsed<=0)return;
