@@ -81,12 +81,22 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 #sb-hist-hd{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 #sb-history-list{flex:1;overflow-y:auto;}
 .sh-empty{text-align:center;color:var(--muted);font-size:0.8rem;padding:20px 16px;line-height:1.6;}
-.sh-day{padding:5px 16px;font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);background:var(--light);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;}
-.sh-row{padding:10px 16px;border-bottom:1px solid var(--border-light);}
+.sh-day{padding:5px 16px;font-size:0.63rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);background:var(--light);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1;display:flex;align-items:center;justify-content:space-between;}
+.sh-day-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.75rem;padding:2px 6px;border-radius:4px;line-height:1;}
+.sh-day-del:hover{color:#c0392b;background:#ffeaea;}
+.sh-row{padding:8px 12px 8px 16px;border-bottom:1px solid var(--border-light);display:flex;align-items:flex-start;gap:6px;}
 .sh-row:hover{background:var(--light);}
+.sh-row-body{flex:1;min-width:0;}
+.sh-row-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0;}
+.sh-play-btn{background:var(--primary);color:#fff;border:none;border-radius:6px;font-size:0.67rem;padding:3px 7px;cursor:pointer;white-space:nowrap;}
+.sh-play-btn:hover{background:var(--primary-dk);}
+.sh-del-btn{background:none;border:1px solid var(--border);border-radius:6px;font-size:0.67rem;padding:3px 7px;cursor:pointer;color:var(--muted);}
+.sh-del-btn:hover{border-color:#c0392b;color:#c0392b;background:#ffeaea;}
 .sh-cond{font-size:0.82rem;font-weight:600;color:var(--text);margin-bottom:2px;}
 .sh-detail{font-size:0.7rem;color:var(--muted);line-height:1.5;}
 .sh-hz-badge{display:inline-block;background:var(--primary-lt);color:var(--primary-dk);font-size:0.64rem;font-weight:700;padding:2px 7px;border-radius:20px;margin-right:3px;margin-top:3px;font-family:'Orbitron',monospace;}
+.sh-clear-btn{background:none;border:1px solid var(--border);border-radius:6px;font-size:0.67rem;padding:2px 8px;cursor:pointer;color:var(--muted);}
+.sh-clear-btn:hover{border-color:#c0392b;color:#c0392b;}
 
 /* ── CENTER ── */
 #freq-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
@@ -269,7 +279,10 @@ select.pp-sel:focus{border-color:var(--primary);}
     <div id="sb-history">
       <div id="sb-hist-hd">
         <span class="sb-hd-title">Behandlungshistorie</span>
-        <span id="sb-hist-count" style="font-size:0.68rem;color:var(--muted);"></span>
+        <span style="display:flex;align-items:center;gap:6px;">
+          <span id="sb-hist-count" style="font-size:0.68rem;color:var(--muted);"></span>
+          <button class="sh-clear-btn" onclick="clearAllHistory()" title="Gesamte Historie löschen">Alle löschen</button>
+        </span>
       </div>
       <div id="sb-history-list">
         <div class="sh-empty">Noch keine Behandlungen aufgezeichnet.</div>
@@ -944,29 +957,105 @@ function renderSidebar(){
   renderHistory();
 }
 
+function dayLabel(dateStr){
+  const d=new Date(dateStr);
+  const today=new Date();
+  const yesterday=new Date();yesterday.setDate(today.getDate()-1);
+  const fmt=(dt)=>dt.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+  if(fmt(d)===fmt(today))return 'Heute, '+fmt(d);
+  if(fmt(d)===fmt(yesterday))return 'Gestern, '+fmt(d);
+  return d.toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function deleteSession(idx){
+  if(!activeClientId)return;
+  const all=clientStore.getAll().map(c=>{
+    if(c.id===activeClientId){c.sessions=(c.sessions||[]).filter((_,i)=>i!==idx);}
+    return c;
+  });
+  clientStore.save(all);renderHistory();
+}
+function deleteDaySessions(dateKey){
+  if(!activeClientId)return;
+  if(!confirm('Alle Einträge von "'+dateKey+'" löschen?'))return;
+  const all=clientStore.getAll().map(c=>{
+    if(c.id===activeClientId){
+      c.sessions=(c.sessions||[]).filter(s=>{
+        const k=new Date(s.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+        return k!==dateKey;
+      });
+    }
+    return c;
+  });
+  clientStore.save(all);renderHistory();
+}
+function clearAllHistory(){
+  if(!activeClientId)return;
+  const c=clientStore.get(activeClientId);
+  if(!c||!(c.sessions||[]).length)return;
+  if(!confirm('Gesamte Behandlungshistorie löschen?'))return;
+  clientStore.update(activeClientId,{sessions:[]});renderHistory();
+}
+function replayFromHistory(s){
+  const entry=DATA.find(d=>d.de===s.de);
+  if(!entry){alert('Eintrag nicht mehr in der Datenbank gefunden.');return;}
+  const hz=parseFloat(s.hz);
+  if(isNaN(hz))return;
+  const tokens=getTokens(entry.f);
+  const cidx=tokens.indexOf(String(hz));
+  playFreq(hz,entry,cidx>=0?cidx:0,s.durSec||60);
+  // Eintrag in der Liste anzeigen
+  const eIdx=DATA.indexOf(entry);
+  const feEl=document.getElementById('fe-'+eIdx);
+  if(feEl){
+    if(!feEl.classList.contains('open')){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';}
+    feEl.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+}
 function renderHistory(){
   const client=activeClientId?clientStore.get(activeClientId):null;
   const listEl=document.getElementById('sb-history-list');
   const countEl=document.getElementById('sb-hist-count');
+  const clearBtn=document.querySelector('.sh-clear-btn');
   if(!client||(client.sessions||[]).length===0){
     listEl.innerHTML='<div class="sh-empty">Noch keine Behandlungen aufgezeichnet.<br>Frequenzen abspielen um Einträge zu erzeugen.</div>';
-    if(countEl)countEl.textContent='';return;
+    if(countEl)countEl.textContent='';
+    if(clearBtn)clearBtn.style.display='none';
+    return;
   }
   if(countEl)countEl.textContent=client.sessions.length+' Einträge';
+  if(clearBtn)clearBtn.style.display='';
+  // Gruppieren nach Datum
   const grouped={};
-  client.sessions.forEach(s=>{
-    const key=new Date(s.date).toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
-    if(!grouped[key])grouped[key]=[];grouped[key].push(s);
+  const dateKeys={};
+  client.sessions.forEach((s,globalIdx)=>{
+    const dk=new Date(s.date).toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'});
+    if(!grouped[dk]){grouped[dk]=[];dateKeys[dk]=dayLabel(s.date);}
+    grouped[dk].push({s,globalIdx});
   });
   listEl.innerHTML='';
-  Object.entries(grouped).forEach(([day,sessions])=>{
-    const hd=document.createElement('div');hd.className='sh-day';hd.textContent=day;listEl.appendChild(hd);
-    sessions.forEach(s=>{
+  Object.entries(grouped).forEach(([dk,entries])=>{
+    const hd=document.createElement('div');hd.className='sh-day';
+    hd.innerHTML=`<span>${dateKeys[dk]}</span><button class="sh-day-del" title="Tag löschen">Tag löschen</button>`;
+    hd.querySelector('.sh-day-del').onclick=()=>deleteDaySessions(dk);
+    listEl.appendChild(hd);
+    entries.forEach(({s,globalIdx})=>{
       const row=document.createElement('div');row.className='sh-row';
       const t=new Date(s.date);
       const time=t.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
       const dur=s.durSec>=60?Math.round(s.durSec/60)+' Min':s.durSec+' Sek';
-      row.innerHTML=`<div class="sh-cond">${s.de}</div><div class="sh-detail">${time} Uhr · ${dur} · ${s.wave||'Sinus'}<br><span class="sh-hz-badge">${s.hz}</span></div>`;
+      row.innerHTML=`
+        <div class="sh-row-body">
+          <div class="sh-cond">${s.de}</div>
+          <div class="sh-detail">${time} Uhr · ${dur} · ${s.wave||'Sinus'}<br>
+            <span class="sh-hz-badge">${s.hz}</span>
+          </div>
+        </div>
+        <div class="sh-row-actions">
+          <button class="sh-play-btn">▶ Start</button>
+          <button class="sh-del-btn">× Löschen</button>
+        </div>`;
+      row.querySelector('.sh-play-btn').onclick=()=>replayFromHistory(s);
+      row.querySelector('.sh-del-btn').onclick=()=>deleteSession(globalIdx);
       listEl.appendChild(row);
     });
   });
