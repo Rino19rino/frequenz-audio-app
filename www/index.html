@@ -123,6 +123,10 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .ai-match-card{background:var(--light);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-top:6px;cursor:pointer;transition:all 0.15s;}
 .ai-match-card:hover{border-color:var(--primary);background:#fff;}
 .ai-match-name{font-weight:700;font-size:0.85rem;color:var(--primary-dk);}
+.cat-badge{display:inline-block;font-size:0.6rem;font-weight:700;letter-spacing:0.04em;padding:2px 7px;border-radius:20px;text-transform:uppercase;margin-bottom:4px;}
+.cat-badge.solfeggio{background:#e8d5f5;color:#6a2a9a;}
+.cat-badge.rife{background:#d4eadb;color:#1a6b36;}
+.cat-badge.binaural{background:#d0e8f5;color:#0a4a7a;}
 .ai-match-en{font-size:0.72rem;color:var(--muted);}
 .ai-match-hz{font-size:0.7rem;color:var(--gold);font-family:'Orbitron',monospace;margin-top:3px;}
 .ai-match-reason{font-size:0.72rem;color:var(--text);margin-top:3px;font-style:italic;}
@@ -1283,6 +1287,16 @@ function handleDnaDrop(e){
   const f=e.dataTransfer.files[0];if(f)handleDnaFile(f);
 }
 // Findet den besten Eintrag: exakt → enthält → Wort-Überschneidung
+function entryCategory(entry){
+  if(!entry)return{label:'Dr. Rife',cls:'rife'};
+  if(entry.de.startsWith('Solfeggio'))return{label:'Solfeggio',cls:'solfeggio'};
+  if(entry.binaural)return{label:'Fibonacci Binaural',cls:'binaural'};
+  return{label:'Dr. Rife',cls:'rife'};
+}
+function catBadgeHTML(entry){
+  const c=entryCategory(entry);
+  return`<span class="cat-badge ${c.cls}">${c.label}</span>`;
+}
 function fuzzyFindEntry(name){
   if(!name)return null;
   const n=name.trim().toLowerCase();
@@ -1357,11 +1371,19 @@ async function analyzeDNA(){
   btn.disabled=true;btn.textContent='… wird analysiert';
   resultEl.innerHTML='<div style="color:var(--muted);font-size:0.78rem;font-style:italic;">🧬 Claude analysiert die DNA-Daten …</div>';
 
-  const entryList=DATA.map(d=>d.de).join(', ');
-  const systemPrompt=`Du bist ein Berater für Rife-Frequenztherapie. Analysiere den DNA-Bericht und schlage passende Einträge aus der Liste vor.
+  const solfeggioList=DATA.filter(d=>d.de.startsWith('Solfeggio')).map(d=>d.de).join(', ');
+  const rifeList=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural).map(d=>d.de).join(', ');
+  const binauralList=DATA.filter(d=>d.binaural).map(d=>d.de).join(', ');
+  const systemPrompt=`Du bist ein Berater für Rife-Frequenztherapie. Analysiere den DNA-Bericht und schlage passende Einträge vor.
+
+PFLICHT: Mindestens 1 Eintrag aus JEDER der drei Sparten:
+- SOLFEGGIO: ${solfeggioList}
+- DR. RIFE: ${rifeList}
+- FIBONACCI BINAURAL: ${binauralList}
+
 Antworte NUR mit JSON-Array (kein Text davor/danach):
-[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","priority":"hoch|mittel|niedrig"}]
-Max. 8 Einträge. Nur Namen exakt aus dieser Liste: ${entryList}`;
+[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","priority":"hoch|mittel|niedrig","category":"Solfeggio|Dr. Rife|Fibonacci Binaural"}]
+Max. 9 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwenden.`;
 
   try{
     let body;
@@ -1398,10 +1420,11 @@ Max. 8 Einträge. Nur Namen exakt aus dieser Liste: ${entryList}`;
       const prioClr=prio==='hoch'?'#c0392b':prio==='mittel'?'#c9963e':'var(--muted)';
       const card=document.createElement('div');card.className='ai-match-card';
       card.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-          <div class="ai-match-name">${entry.de}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          ${catBadgeHTML(entry)}
           <span style="font-size:0.65rem;font-weight:700;color:${prioClr};text-transform:uppercase;">${prio}</span>
         </div>
+        <div class="ai-match-name">${entry.de}</div>
         <div class="ai-match-en">${entry.en}</div>
         <div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div>
         <div class="ai-match-reason">${m.reason||''}</div>
@@ -1458,16 +1481,25 @@ async function askAI(){
   statusEl.textContent='KI analysiert die Beschwerden …';
   resultEl.innerHTML='<div id="ai-status">KI analysiert die Beschwerden …</div>';
 
-  const entryList=DATA.map(d=>`${d.de} (${d.en})`).join('\n');
-  const systemPrompt=`Du bist ein Rife-Frequenz-Spezialist-Assistent.
-Du hilfst dabei, passende Frequenzeinträge aus einer Datenbank zu finden.
+  const solfeggioList=DATA.filter(d=>d.de.startsWith('Solfeggio')).map(d=>`${d.de} (${d.en})`).join('\n');
+  const rifeList=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural).map(d=>`${d.de} (${d.en})`).join('\n');
+  const binauralList=DATA.filter(d=>d.binaural).map(d=>`${d.de} (${d.en})`).join('\n');
+  const systemPrompt=`Du bist ein Rife-Frequenz-Spezialist-Assistent. Analysiere die beschriebenen Beschwerden.
 
-WICHTIG: Antworte AUSSCHLIESSLICH mit einem JSON-Array. Kein erklärender Text davor oder danach.
-Format: [{"de":"Exakter Name aus der Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)"}]
-Maximal 5 Einträge. Nur Einträge aus der bereitgestellten Liste verwenden.
+PFLICHT: Schlage mindestens 1 Eintrag aus JEDER der drei Sparten vor.
 
-Verfügbare Einträge:
-${entryList}`;
+SOLFEGGIO-FREQUENZEN:
+${solfeggioList}
+
+DR. RIFE-FREQUENZEN:
+${rifeList}
+
+FIBONACCI BINAURAL BEATS (Stereo-Kopfhörer erforderlich):
+${binauralList}
+
+WICHTIG: Antworte AUSSCHLIESSLICH mit JSON-Array, kein Text davor/danach.
+Format: [{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","category":"Solfeggio|Dr. Rife|Fibonacci Binaural"}]
+Max. 9 Einträge (mind. 1 pro Sparte). Nur exakte Namen verwenden.`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -1504,7 +1536,7 @@ ${entryList}`;
       const freqs=getTokens(entry.f);
       const hz=freqs.slice(0,3).join(' · ')+' Hz';
       const card=document.createElement('div');card.className='ai-match-card';
-      card.innerHTML=`<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>
+      card.innerHTML=`${catBadgeHTML(entry)}<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>
         <div style="display:flex;gap:6px;margin-top:8px;">
           <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
           <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
