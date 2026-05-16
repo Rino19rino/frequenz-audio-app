@@ -3054,7 +3054,7 @@ Beispiel: ["Hüftgelenk","Arthrose","Gelenkschmerz","Entzündung","Knorpel","Hü
     const grab=bestFromGroup(d=>!!d.grabovoi,4);
 
     const maxScore=Math.max(1,...[...sol,...bin,...rife,...grab].map(x=>x.s));
-    const allMatches=[...sol,...bin,...rife,...grab];
+    const allMatches=[...sol,...bin,...rife,...grab].sort((a,b)=>b.s-a.s);
 
     // Ergebnisse rendern
     const reasons={
