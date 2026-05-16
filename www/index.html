@@ -2910,9 +2910,10 @@ Format: [{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 
     const data=await res.json();
     let text=data.content?.[0]?.text||'';
     text=text.replace(/```(?:json)?/g,'').replace(/```/g,'');
-    const i1=text.indexOf('['),i2=text.lastIndexOf(']');
     let matches=[];
-    try{matches=JSON.parse(i1!==-1&&i2!==-1?text.slice(i1,i2+1):text.trim());}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
+    {const j2=text.lastIndexOf(']');let ok=false;
+    for(let k=text.length-1;k>=0&&!ok;k--){if(text[k]!=='[')continue;try{const r=JSON.parse(text.slice(k,j2+1));if(Array.isArray(r)){matches=r;ok=true;}}catch(e){}}
+    if(!ok)throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
     if(!Array.isArray(matches)||!matches.length){resultEl.innerHTML='<div style="font-size:0.78rem;color:var(--muted);">Keine spezifischen Einträge gefunden.</div>';return;}
 
     resultEl.innerHTML=`<div style="font-weight:600;font-size:0.8rem;color:var(--primary-dk);margin-bottom:8px;">🧬 ${matches.length} Frequenzvorschläge aus DNA-Analyse:</div>`;
