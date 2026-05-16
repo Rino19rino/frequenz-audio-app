@@ -2985,20 +2985,18 @@ async function askAI(){
   statusEl.textContent='KI analysiert die Beschwerden …';
   resultEl.innerHTML='<div id="ai-status">KI analysiert die Beschwerden …</div>';
 
-  // Keyword-Vorfilterung: nur relevante Einträge senden, um Token-Limit zu vermeiden
-  const kws=symptom.toLowerCase().split(/\s+/).filter(w=>w.length>3);
-  function smartList(arr,maxFull=70){
-    const matched=arr.filter(d=>{const t=(d.de+' '+d.en).toLowerCase();return kws.some(k=>t.includes(k));});
-    const unmatched=arr.filter(d=>!matched.includes(d));
-    return [...matched,...unmatched].slice(0,maxFull).map(d=>d.de).join(', ');
-  }
+  // Gleichmäßig verteilte Auswahl – Claude bildet selbst die relevanten Konzepte
+  function spreadSample(arr,n){const step=Math.max(1,Math.floor(arr.length/n));return arr.filter((_,i)=>i%step===0).slice(0,n);}
   const solfeggioList=DATA.filter(d=>d.de.startsWith('Solfeggio')).map(d=>d.de).join(', ');
-  const rifeList=smartList(DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi),80);
+  const rifeArr=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi);
+  const rifeList=spreadSample(rifeArr,90).map(d=>d.de).join(', ');
   const binauralList=DATA.filter(d=>d.binaural).map(d=>d.de).join(', ');
-  const grabovoiList=smartList(DATA.filter(d=>d.grabovoi),80);
-  const systemPrompt=`Du bist ein ganzheitlicher Gesundheitsassistent. Analysiere die beschriebenen Beschwerden.
+  const grabovoiList=spreadSample(DATA.filter(d=>d.grabovoi),90).map(d=>d.de).join(', ');
+  const systemPrompt=`Du bist ein ganzheitlicher Gesundheitsassistent.
 
-PFLICHT: Schlage mindestens 1 Eintrag aus JEDER der vier Sparten vor.
+AUFGABE: Lies die Klientenbeschreibung sorgfältig. Leite daraus eigenständig die medizinisch relevanten Konzepte, Organe und Beschwerden ab. Wähle dann aus den folgenden Listen die am besten passenden Einträge aus.
+
+PFLICHT: Mind. 1 Eintrag aus JEDER der vier Sparten.
 
 SOLFEGGIO-FREQUENZEN (akustisch): ${solfeggioList}
 
@@ -3006,12 +3004,12 @@ DR. RIFE-FREQUENZEN (akustisch): ${rifeList}
 
 FIBONACCI BINAURAL BEATS (Stereo-Kopfhörer): ${binauralList}
 
-GRABOVOI HEILZAHLEN (auf Körper/Träger schreiben oder visualisieren): ${grabovoiList}
+GRABOVOI HEILZAHLEN (schreiben/visualisieren): ${grabovoiList}
 
-AUSGABE: Nur das rohe JSON-Array ohne jeglichen anderen Text, keine Erklärungen, kein Markdown.
-Beginne deine Antwort direkt mit [ und ende mit ]
-Format: [{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
-"relevance": Ganzzahl 0–100. Max. 12 Einträge, mind. 1 pro Sparte. Nur exakte Namen aus den Listen.`;
+AUSGABE: Nur das rohe JSON-Array, kein anderer Text, kein Markdown.
+Beginne direkt mit [ und ende mit ]
+[{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+relevance: Ganzzahl 0–100. Max. 12 Einträge, mind. 1 pro Sparte.`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
