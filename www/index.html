@@ -1651,7 +1651,7 @@ function buildList(data){
   groups.forEach(g=>{
     const items=data.filter(g.filter);
     if(!items.length)return;
-    const sparte=document.createElement('div');sparte.className='sparte open';
+    const sparte=document.createElement('div');sparte.className='sparte';
     const hd=document.createElement('div');hd.className='sparte-hd '+g.cls;
     hd.innerHTML=`<span class="sparte-icon">${g.icon}</span><span class="sparte-label">${g.label}</span><span class="sparte-count">${items.length} Einträge</span><span class="sparte-tog">▼</span>`;
     hd.onclick=()=>{sparte.classList.toggle('open');};
