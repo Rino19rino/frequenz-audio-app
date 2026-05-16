@@ -2988,11 +2988,20 @@ async function askAI(){
 
   // Stufe 1: Claude extrahiert Schlüsselbegriffe – kein Datenlimit, volles Spektrum lokal
   const systemPrompt=`Du bist ein medizinischer Fachexperte für Frequenz- und Schwingungstherapie.
-Analysiere die folgende Klientenbeschreibung und extrahiere daraus alle relevanten medizinischen Schlüsselbegriffe auf Deutsch.
-Berücksichtige: Symptome, betroffene Organe/Körperteile, mögliche Ursachen, verwandte Beschwerden.
+Analysiere die Klientenbeschreibung und extrahiere NUR medizinisch-therapeutisch relevante Schlüsselbegriffe auf Deutsch.
+
+Extrahiere:
+- Betroffene Körperteile und Gelenke (z.B. Hüfte, Kniegelenk, Wirbelsäule)
+- Symptome und Beschwerden (z.B. Schmerz, Entzündung, Schwellung)
+- Mögliche Diagnosen (z.B. Arthrose, Arthritis, Bursitis)
+- Betroffene Gewebe/Systeme (z.B. Knorpel, Sehne, Muskel, Nerv)
+- Verwandte Beschwerden (z.B. Durchblutungsstörung, Nervenschmerz)
+
+NICHT extrahieren: Tätigkeiten (stehen, liegen, gehen, sitzen), Zeitangaben, Häufigkeiten, Füllwörter.
+
 Antworte NUR mit einem JSON-Array aus Strings. Kein Markdown, kein Text davor oder danach.
-Beispiel: ["Gelenkschmerzen","Arthrose","Entzündung","Hüfte","Durchblutung"]
-10–18 Begriffe, kurz und präzise.`;
+Beispiel: ["Hüftgelenk","Arthrose","Gelenkschmerz","Entzündung","Knorpel","Hüfte","Gelenk"]
+8–15 präzise medizinische Begriffe.`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
@@ -3033,13 +3042,19 @@ Beispiel: ["Gelenkschmerzen","Arthrose","Entzündung","Hüfte","Durchblutung"]
     function topFromGroup(filter,n){
       return DATA.filter(filter).map(d=>({d,s:scoreEntry(d)})).sort((a,b)=>b.s-a.s).slice(0,n);}
 
-    const sol=topFromGroup(d=>d.de.startsWith('Solfeggio'),2);
-    const bin=topFromGroup(d=>!!d.binaural,2);
-    const rife=topFromGroup(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi,4);
-    const grab=topFromGroup(d=>!!d.grabovoi,4);
+    function bestFromGroup(filter,n){
+      const scored=DATA.filter(filter).map(d=>({d,s:scoreEntry(d)})).sort((a,b)=>b.s-a.s);
+      const withHit=scored.filter(x=>x.s>0).slice(0,n);
+      // Mind. 1 pro Sparte als allg. Empfehlung wenn keine Keywords passen
+      return withHit.length?withHit:[{d:scored[0]?.d,s:0,fallback:true}].filter(x=>x.d);
+    }
+    const sol=bestFromGroup(d=>d.de.startsWith('Solfeggio'),2);
+    const bin=bestFromGroup(d=>!!d.binaural,2);
+    const rife=bestFromGroup(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi,4);
+    const grab=bestFromGroup(d=>!!d.grabovoi,4);
 
     const maxScore=Math.max(1,...[...sol,...bin,...rife,...grab].map(x=>x.s));
-    const allMatches=[...sol,...bin,...rife,...grab].filter(x=>x.s>0||true);
+    const allMatches=[...sol,...bin,...rife,...grab];
 
     // Ergebnisse rendern
     const reasons={
@@ -3052,12 +3067,12 @@ Beispiel: ["Gelenkschmerzen","Arthrose","Entzündung","Hüfte","Durchblutung"]
     if(!allMatches.length){resultEl.innerHTML='<div id="ai-status">Keine passenden Einträge gefunden.</div>';return;}
     resultEl.innerHTML='<div id="ai-status" style="color:var(--primary-dk);font-weight:600;margin-bottom:6px;">✦ '+allMatches.length+' Vorschläge gefunden: <span style="font-weight:400;font-size:0.8em;color:#888;">Keywords: '+keywords.slice(0,6).join(', ')+(keywords.length>6?' …':'')+'</span></div>';
 
-    allMatches.forEach(({d:entry,s})=>{
+    allMatches.forEach(({d:entry,s,fallback})=>{
       if(!entry)return;
-      const rawRel=maxScore>0?Math.round((s/maxScore)*100):50;
-      const rel=Math.max(20,Math.min(100,rawRel));
+      const rawRel=fallback?15:(maxScore>0?Math.round((s/maxScore)*100):50);
+      const rel=Math.max(fallback?10:20,Math.min(100,rawRel));
       const cat=entry.de.startsWith('Solfeggio')?'solfeggio':entry.binaural?'binaural':entry.grabovoi?'grabovoi':'rife';
-      const reason=reasons[cat];
+      const reason=fallback?'Allgemeine Empfehlung für diese Sparte.':reasons[cat];
       const eIdx=DATA.indexOf(entry);
       const freqs=getTokens(entry.f);
       const hz=freqs.slice(0,3).join(' · ')+' Hz';
