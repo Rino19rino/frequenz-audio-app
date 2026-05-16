@@ -131,6 +131,9 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .ai-match-en{font-size:0.72rem;color:var(--muted);}
 .ai-match-hz{font-size:0.7rem;color:var(--gold);font-family:'Orbitron',monospace;margin-top:3px;}
 .ai-match-reason{font-size:0.72rem;color:var(--text);margin-top:3px;font-style:italic;}
+.ai-relevance-wrap{background:#dde3ea;border-radius:3px;margin-top:6px;overflow:hidden;height:7px;}
+.ai-relevance-bar{height:7px;border-radius:3px;transition:width 0.5s ease;}
+.ai-relevance-label{display:flex;justify-content:space-between;align-items:center;font-size:0.65rem;color:var(--muted);margin-top:2px;}
 /* AI Tabs */
 .ai-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:12px;}
 .ai-tab{flex:1;padding:7px 4px;background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:600;color:var(--muted);transition:all 0.15s;}
@@ -1141,7 +1144,7 @@ const DATA=[
   {de:'Salmonellen B Salmonella B',en:'Salmonellen B Salmonella B',f:'546 1634'},
   {de:'Samenstrangentzündung',en:'Samenstrangentzündung',f:'1500 880 787 727 20'},
   {de:'Sarkom Cancer sarcoma',en:'Sarkom Cancer sarcoma',f:'727 787 880 2000 2008 2127'},
-  {de:'SauerstoEmangel (Hypoxie)',en:'Hypoxia (low oxygen)',f:'727 787 880 10000'},
+  {de:'Sauerstoffmangel (Hypoxie)',en:'Hypoxia (low oxygen)',f:'727 787 880 10000'},
   {de:'Schistosoma mansoni Schistosoma Mansoni',en:'Schistosoma mansoni Schistosoma Mansoni',f:'329'},
   {de:'Schla%osigkeit Insomnia',en:'Schla%osigkeit Insomnia',f:'1550 1500 880 10 727 787 880 10000'},
   {de:'Schlechte',en:'Gesichtsfarbe Bad complexion',f:'5000'},
@@ -2882,7 +2885,8 @@ PFLICHT: Mindestens 1 Eintrag aus JEDER der vier Sparten:
 - GRABOVOI HEILZAHLEN (schreiben/visualisieren): ${grabovoiList}
 
 Antworte NUR mit JSON-Array (kein Text davor/danach):
-[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","priority":"hoch|mittel|niedrig","category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+"relevance" ist eine Ganzzahl 0–100 (100 = höchste Empfehlung, wie stark passt dieser Eintrag zu den genetischen Befunden).
 Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwenden.`;
 
   try{
@@ -2916,18 +2920,17 @@ Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwende
       const eIdx=DATA.indexOf(entry);
       const freqs=getTokens(entry.f);
       const hz=freqs.slice(0,3).join(' · ')+' Hz';
-      const prio=m.priority||'mittel';
-      const prioClr=prio==='hoch'?'#c0392b':prio==='mittel'?'#c9963e':'var(--muted)';
+      const rel=Math.min(100,Math.max(0,parseInt(m.relevance)||70));
+      const relClr=rel>=80?'#27ae60':rel>=60?'#16a085':rel>=40?'#c9963e':'#95a5a6';
       const card=document.createElement('div');card.className='ai-match-card';
       card.innerHTML=`
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-          ${catBadgeHTML(entry)}
-          <span style="font-size:0.65rem;font-weight:700;color:${prioClr};text-transform:uppercase;">${prio}</span>
-        </div>
+        ${catBadgeHTML(entry)}
         <div class="ai-match-name">${entry.de}</div>
         <div class="ai-match-en">${entry.en}</div>
         <div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div>
         <div class="ai-match-reason">${m.reason||''}</div>
+        <div class="ai-relevance-label"><span>Relevanz</span><strong style="color:${relClr};">${rel}%</strong></div>
+        <div class="ai-relevance-wrap"><div class="ai-relevance-bar" style="width:${rel}%;background:${relClr};"></div></div>
         <div style="display:flex;gap:6px;margin-top:8px;">
           <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
           <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
@@ -2998,7 +3001,8 @@ FIBONACCI BINAURAL BEATS (Stereo-Kopfhörer): ${binauralList}
 GRABOVOI HEILZAHLEN (auf Körper/Träger schreiben oder visualisieren): ${grabovoiList}
 
 WICHTIG: Antworte AUSSCHLIESSLICH mit JSON-Array, kein Text davor/danach.
-Format: [{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+Format: [{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+"relevance" ist eine Ganzzahl 0–100 (100 = höchste Empfehlung basierend auf den Beschwerden).
 Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen verwenden.`;
 
   try{
@@ -3036,7 +3040,9 @@ Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen verwenden.`;
       const freqs=getTokens(entry.f);
       const hz=freqs.slice(0,3).join(' · ')+' Hz';
       const card=document.createElement('div');card.className='ai-match-card';
-      card.innerHTML=`${catBadgeHTML(entry)}<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>
+      const rel=Math.min(100,Math.max(0,parseInt(m.relevance)||70));
+      const relClr=rel>=80?'#27ae60':rel>=60?'#16a085':rel>=40?'#c9963e':'#95a5a6';
+      card.innerHTML=`${catBadgeHTML(entry)}<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div><div class="ai-relevance-label"><span>Relevanz</span><strong style="color:${relClr};">${rel}%</strong></div><div class="ai-relevance-wrap"><div class="ai-relevance-bar" style="width:${rel}%;background:${relClr};"></div></div>
         <div style="display:flex;gap:6px;margin-top:8px;">
           <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
           <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
