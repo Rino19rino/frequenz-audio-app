@@ -2873,9 +2873,9 @@ async function analyzeDNA(){
   resultEl.innerHTML='<div style="color:var(--muted);font-size:0.78rem;font-style:italic;">🧬 Claude analysiert die DNA-Daten …</div>';
 
   const solfeggioList=DATA.filter(d=>d.de.startsWith('Solfeggio')).map(d=>d.de).join(', ');
-  const rifeList=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi).map(d=>d.de).join(', ');
+  const rifeList=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi).slice(0,80).map(d=>d.de).join(', ');
   const binauralList=DATA.filter(d=>d.binaural).map(d=>d.de).join(', ');
-  const grabovoiList=DATA.filter(d=>d.grabovoi).map(d=>d.de).join(', ');
+  const grabovoiList=DATA.filter(d=>d.grabovoi).slice(0,80).map(d=>d.de).join(', ');
   const systemPrompt=`Du bist ein ganzheitlicher Gesundheitsberater. Analysiere den DNA-Bericht und schlage passende Einträge vor.
 
 PFLICHT: Mindestens 1 Eintrag aus JEDER der vier Sparten:
@@ -2984,10 +2984,17 @@ async function askAI(){
   statusEl.textContent='KI analysiert die Beschwerden …';
   resultEl.innerHTML='<div id="ai-status">KI analysiert die Beschwerden …</div>';
 
+  // Keyword-Vorfilterung: nur relevante Einträge senden, um Token-Limit zu vermeiden
+  const kws=symptom.toLowerCase().split(/\s+/).filter(w=>w.length>3);
+  function smartList(arr,maxFull=70){
+    const matched=arr.filter(d=>{const t=(d.de+' '+d.en).toLowerCase();return kws.some(k=>t.includes(k));});
+    const unmatched=arr.filter(d=>!matched.includes(d));
+    return [...matched,...unmatched].slice(0,maxFull).map(d=>d.de).join(', ');
+  }
   const solfeggioList=DATA.filter(d=>d.de.startsWith('Solfeggio')).map(d=>d.de).join(', ');
-  const rifeList=DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi).map(d=>d.de).join(', ');
+  const rifeList=smartList(DATA.filter(d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi),80);
   const binauralList=DATA.filter(d=>d.binaural).map(d=>d.de).join(', ');
-  const grabovoiList=DATA.filter(d=>d.grabovoi).map(d=>d.de).join(', ');
+  const grabovoiList=smartList(DATA.filter(d=>d.grabovoi),80);
   const systemPrompt=`Du bist ein ganzheitlicher Gesundheitsassistent. Analysiere die beschriebenen Beschwerden.
 
 PFLICHT: Schlage mindestens 1 Eintrag aus JEDER der vier Sparten vor.
