@@ -3038,7 +3038,7 @@ relevance: Ganzzahl 0–100. Max. 12 Einträge, mind. 1 pro Sparte.`;
     let matches=[];
     {const j2=text.lastIndexOf(']');let ok=false;
     for(let k=text.length-1;k>=0&&!ok;k--){if(text[k]!=='[')continue;try{const r=JSON.parse(text.slice(k,j2+1));if(Array.isArray(r)){matches=r;ok=true;}}catch(e){}}
-    if(!ok)throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
+    if(!ok)throw new Error('Rohtext: '+text.slice(0,300));}
     if(!Array.isArray(matches)||!matches.length){resultEl.innerHTML='<div id="ai-status">Keine passenden Einträge gefunden.</div>';return;}
 
     resultEl.innerHTML='<div id="ai-status" style="color:var(--primary-dk);font-weight:600;margin-bottom:6px;">✦ '+matches.length+' Vorschläge gefunden:</div>';
