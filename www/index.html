@@ -1092,6 +1092,9 @@ const clientStore={
 function setActiveClient(id){
   activeClientId=id;
   localStorage.setItem('rife_active_client',id||'');
+  // DNA-Datei für diesen Klienten laden
+  dnaFileData=id?loadDnaForClient(id):null;
+  updateDnaUI();
   renderSidebar();
 }
 
@@ -1120,6 +1123,21 @@ function renderSidebar(){
     const notesWrap=document.getElementById('cc-notes-wrap');
     if(client.notes){document.getElementById('cc-notes').textContent=client.notes;notesWrap.style.display='flex';}
     else notesWrap.style.display='none';
+    // DNA-Badge
+    const dnaStored=loadDnaForClient(client.id);
+    let dnaBadge=document.getElementById('cc-dna-badge');
+    if(!dnaBadge){
+      dnaBadge=document.createElement('div');dnaBadge.id='cc-dna-badge';
+      dnaBadge.style.cssText='margin-top:8px;padding:6px 10px;background:#edf7ed;border:1px solid #a8d5b0;border-radius:8px;font-size:0.72rem;display:flex;align-items:center;gap:6px;';
+      document.getElementById('sb-cc-data').appendChild(dnaBadge);
+    }
+    if(dnaStored){
+      dnaBadge.style.display='flex';
+      dnaBadge.innerHTML=`<span style="flex:1">🧬 <strong>${dnaStored.name}</strong><br><span style="color:var(--muted);font-size:0.66rem;">DNA-Analyse hinterlegt</span></span>
+        <button onclick="deleteDnaForClient('${client.id}')" style="background:#ffeaea;border:1px solid #e0a0a0;color:#c0392b;border-radius:6px;padding:2px 8px;font-size:0.68rem;cursor:pointer;">✕ Löschen</button>`;
+    } else {
+      dnaBadge.style.display='none';
+    }
     document.getElementById('hdr-cl-name').textContent=client.name;
     const dob=client.dob?new Date(client.dob):null;
     const age=dob?Math.floor((Date.now()-dob)/(365.25*24*3600*1000)):'';
@@ -1282,6 +1300,48 @@ function switchAiTab(tab,btn){
 
 // ── DNA ──
 let dnaFileData=null;
+
+function dnaStorageKey(clientId){return'rife_dna_'+clientId;}
+
+function saveDnaForClient(data){
+  if(!activeClientId||!data)return;
+  try{
+    localStorage.setItem(dnaStorageKey(activeClientId),JSON.stringify(data));
+    renderSidebar(); // Aktualisiert DNA-Badge in Klientenkarte
+  }catch(e){
+    console.warn('DNA-Speicherung fehlgeschlagen (evtl. zu groß):',e.message);
+  }
+}
+
+function loadDnaForClient(clientId){
+  if(!clientId)return null;
+  const raw=localStorage.getItem(dnaStorageKey(clientId));
+  return raw?JSON.parse(raw):null;
+}
+
+function deleteDnaForClient(clientId){
+  localStorage.removeItem(dnaStorageKey(clientId));
+  if(activeClientId===clientId){
+    dnaFileData=null;
+    updateDnaUI();
+  }
+  renderSidebar();
+}
+
+function updateDnaUI(){
+  const infoEl=document.getElementById('dna-file-info');
+  const btn=document.getElementById('dna-analyze-btn');
+  if(dnaFileData){
+    infoEl.style.display='block';
+    infoEl.style.background='#edf7ed';infoEl.style.color='#1a6b36';
+    infoEl.innerHTML=`🧬 <strong>${dnaFileData.name}</strong> – gespeichert${activeClientId?' für diesen Klienten':''}`;
+    btn.disabled=false;
+  } else {
+    infoEl.style.display='none';
+    btn.disabled=true;
+  }
+}
+
 function handleDnaDrop(e){
   e.preventDefault();document.getElementById('dna-drop').classList.remove('drag-over');
   const f=e.dataTransfer.files[0];if(f)handleDnaFile(f);
@@ -1339,7 +1399,11 @@ function handleDnaFile(file){
     infoEl.style.background='';infoEl.style.color='';
     infoEl.textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
     const reader=new FileReader();
-    reader.onload=e=>{dnaFileData={type:'pdf',base64:e.target.result.split(',')[1],name:file.name};document.getElementById('dna-analyze-btn').disabled=false;};
+    reader.onload=e=>{
+      dnaFileData={type:'pdf',base64:e.target.result.split(',')[1],name:file.name};
+      saveDnaForClient(dnaFileData);
+      updateDnaUI();
+    };
     reader.readAsDataURL(file);
   } else {
     infoEl.style.background='';infoEl.style.color='';
@@ -1357,7 +1421,8 @@ function handleDnaFile(file){
         infoEl.textContent='📄 '+file.name+' ('+Math.round(file.size/1024)+' KB) – geladen';
       }
       dnaFileData={type:'text',text,name:file.name};
-      document.getElementById('dna-analyze-btn').disabled=false;
+      saveDnaForClient(dnaFileData);
+      updateDnaUI();
     };
     reader.readAsText(file);
   }
