@@ -2884,10 +2884,10 @@ PFLICHT: Mindestens 1 Eintrag aus JEDER der vier Sparten:
 - FIBONACCI BINAURAL (Stereo-Kopfhörer): ${binauralList}
 - GRABOVOI HEILZAHLEN (schreiben/visualisieren): ${grabovoiList}
 
-Antworte NUR mit JSON-Array (kein Text davor/danach):
-[{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
-"relevance" ist eine Ganzzahl 0–100 (100 = höchste Empfehlung, wie stark passt dieser Eintrag zu den genetischen Befunden).
-Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwenden.`;
+AUSGABE: Nur das rohe JSON-Array, kein anderer Text, kein Markdown.
+Beginne deine Antwort direkt mit [ und ende mit ]
+Format: [{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 Wörter","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
+"relevance": Ganzzahl 0–100. Max. 12 Einträge, mind. 1 pro Sparte. Nur exakte Namen aus den Listen.`;
 
   try{
     let body;
@@ -2910,9 +2910,9 @@ Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwende
     const data=await res.json();
     let text=data.content?.[0]?.text||'';
     text=text.replace(/```(?:json)?/g,'').replace(/```/g,'');
-    const i1=text.indexOf('['),i2=text.lastIndexOf(']');
+    const i1=text.indexOf('[{'),i2=text.lastIndexOf('}]');
     let matches=[];
-    try{matches=JSON.parse(i1!==-1&&i2!==-1?text.slice(i1,i2+1):'');}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
+    try{matches=i1!==-1&&i2!==-1?JSON.parse(text.slice(i1,i2+2)):JSON.parse(text.trim());}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
     if(!Array.isArray(matches)||!matches.length){resultEl.innerHTML='<div style="font-size:0.78rem;color:var(--muted);">Keine spezifischen Einträge gefunden.</div>';return;}
 
     resultEl.innerHTML=`<div style="font-weight:600;font-size:0.8rem;color:var(--primary-dk);margin-bottom:8px;">🧬 ${matches.length} Frequenzvorschläge aus DNA-Analyse:</div>`;
@@ -3008,10 +3008,10 @@ FIBONACCI BINAURAL BEATS (Stereo-Kopfhörer): ${binauralList}
 
 GRABOVOI HEILZAHLEN (auf Körper/Träger schreiben oder visualisieren): ${grabovoiList}
 
-WICHTIG: Antworte AUSSCHLIESSLICH mit JSON-Array, kein Text davor/danach.
+AUSGABE: Nur das rohe JSON-Array ohne jeglichen anderen Text, keine Erklärungen, kein Markdown.
+Beginne deine Antwort direkt mit [ und ende mit ]
 Format: [{"de":"Exakter Name aus Liste","reason":"Kurze Begründung auf Deutsch (max 12 Wörter)","relevance":85,"category":"Solfeggio|Dr. Rife|Fibonacci Binaural|Grabovoi"}]
-"relevance" ist eine Ganzzahl 0–100 (100 = höchste Empfehlung basierend auf den Beschwerden).
-Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen verwenden.`;
+"relevance": Ganzzahl 0–100. Max. 12 Einträge, mind. 1 pro Sparte. Nur exakte Namen aus den Listen.`;
 
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{
