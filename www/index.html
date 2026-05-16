@@ -1219,7 +1219,7 @@ function fuzzyFindEntry(name){
   return bestScore>0?best:null;
 }
 
-const DNA_PDF_MAX=512*1024; // 500 KB
+const DNA_PDF_MAX=6*1024*1024; // 6 MB
 const DNA_TXT_MAX=40000;    // ~10K tokens
 
 function handleDnaFile(file){
@@ -1237,7 +1237,7 @@ function handleDnaFile(file){
   if(ext==='pdf'){
     if(file.size>DNA_PDF_MAX){
       infoEl.style.background='#ffeaea';infoEl.style.color='#c0392b';
-      infoEl.innerHTML=`⚠ PDF zu groß (${Math.round(file.size/1024)} KB) – max. 500 KB.<br>
+      infoEl.innerHTML=`⚠ PDF zu groß (${Math.round(file.size/1024/1024*10)/10} MB) – max. 6 MB.<br>
         <strong>Tipp:</strong> Öffne das PDF, kopiere die wichtigsten Befunde und füge sie im Tab <em>✦ Beschwerden</em> als Text ein.`;
       return;
     }
