@@ -3075,22 +3075,27 @@ function buildList(data){
     {key:'grabovoi', label:'Grabovoi Heilzahlen',        icon:'🔢',cls:'grabovoi', filter:d=>!!d.grabovoi},
   ];
 
-  // When searching, skip grouping and show flat list under a single section
   const isSearch=data.length<DATA.length;
-  if(isSearch){
-    const body=document.createElement('div');body.style.cssText='padding:4px 0';
-    renderItems(data,body);
-    list.appendChild(body);
-    return;
-  }
 
   groups.forEach(g=>{
-    const items=data.filter(g.filter);
-    if(!items.length)return;
-    const sparte=document.createElement('div');sparte.className='sparte';
+    const matched=data.filter(g.filter);
+    // Bei Suche: wenn keine Treffer → zeige 1 allgemeinen Vorschlag aus dieser Sparte
+    let items=matched;
+    let isGeneral=false;
+    if(isSearch&&!matched.length){
+      // Allgemeinen Eintrag aus dieser Sparte als Fallback
+      const fallback=DATA.filter(g.filter).slice(0,1);
+      if(!fallback.length)return;
+      items=fallback;
+      isGeneral=true;
+    }
+    const sparte=document.createElement('div');sparte.className='sparte'+(isSearch?' open':'');
     const hd=document.createElement('div');hd.className='sparte-hd '+g.cls;
-    hd.innerHTML=`<span class="sparte-icon">${g.icon}</span><span class="sparte-label">${g.label}</span><span class="sparte-count">${items.length} Einträge</span><span class="sparte-tog">▼</span>`;
-    hd.onclick=()=>{sparte.classList.toggle('open');};
+    const countLabel=isGeneral
+      ?`<span class="sparte-count" style="font-style:italic;opacity:0.75;">allg. Empfehlung</span>`
+      :`<span class="sparte-count">${matched.length} Treffer</span>`;
+    hd.innerHTML=`<span class="sparte-icon">${g.icon}</span><span class="sparte-label">${g.label}</span>${countLabel}<span class="sparte-tog">▲</span>`;
+    hd.onclick=()=>{sparte.classList.toggle('open');hd.querySelector('.sparte-tog').textContent=sparte.classList.contains('open')?'▲':'▼';};
     const body=document.createElement('div');body.className='sparte-body';
     renderItems(items,body);
     sparte.appendChild(hd);sparte.appendChild(body);
