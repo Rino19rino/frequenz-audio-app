@@ -118,7 +118,7 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 #ai-key-row.visible{display:flex;gap:6px;}
 #ai-key-input{flex:1;padding:6px 10px;border:1.5px solid var(--border);border-radius:var(--radius);font-size:0.8rem;font-family:'Inter',sans-serif;outline:none;}
 #ai-key-save{background:var(--primary);color:#fff;border:none;border-radius:var(--radius);padding:6px 12px;font-size:0.78rem;cursor:pointer;}
-#ai-result{margin-top:10px;}
+#ai-result{margin-top:10px;max-height:320px;overflow-y:auto;}
 #ai-status{font-size:0.78rem;color:var(--muted);font-style:italic;}
 .ai-match-card{background:var(--light);border:1.5px solid var(--border);border-radius:var(--radius);padding:8px 12px;margin-top:6px;cursor:pointer;transition:all 0.15s;}
 .ai-match-card:hover{border-color:var(--primary);background:#fff;}
@@ -141,7 +141,7 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 #dna-analyze-btn{margin-top:8px;background:var(--gold);color:#fff;border:none;border-radius:var(--radius);padding:8px 18px;font-weight:600;font-size:0.82rem;cursor:pointer;font-family:'Inter',sans-serif;width:100%;}
 #dna-analyze-btn:disabled{background:var(--muted);cursor:not-allowed;}
 #dna-disclaimer{margin-top:8px;font-size:0.68rem;color:var(--muted);line-height:1.5;padding:6px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);}
-#dna-result{margin-top:10px;}
+#dna-result{margin-top:10px;max-height:340px;overflow-y:auto;}
 
 /* ── CENTER ── */
 #freq-panel{display:flex;flex-direction:column;overflow:hidden;background:var(--bg);}
@@ -1201,6 +1201,24 @@ function handleDnaDrop(e){
   e.preventDefault();document.getElementById('dna-drop').classList.remove('drag-over');
   const f=e.dataTransfer.files[0];if(f)handleDnaFile(f);
 }
+// Findet den besten Eintrag: exakt → enthält → Wort-Überschneidung
+function fuzzyFindEntry(name){
+  if(!name)return null;
+  const n=name.trim().toLowerCase();
+  let found=DATA.find(d=>d.de.toLowerCase()===n);
+  if(found)return found;
+  found=DATA.find(d=>d.de.toLowerCase().includes(n)||n.includes(d.de.toLowerCase()));
+  if(found)return found;
+  const words=n.split(/[\s\/\-,]+/).filter(w=>w.length>3);
+  let best=null,bestScore=0;
+  DATA.forEach(d=>{
+    const dn=d.de.toLowerCase();
+    const score=words.filter(w=>dn.includes(w)).length;
+    if(score>bestScore){bestScore=score;best=d;}
+  });
+  return bestScore>0?best:null;
+}
+
 const DNA_PDF_MAX=512*1024; // 500 KB
 const DNA_TXT_MAX=40000;    // ~10K tokens
 
@@ -1291,14 +1309,28 @@ Max. 8 Einträge. Nur Namen exakt aus dieser Liste: ${entryList}`;
 
     resultEl.innerHTML=`<div style="font-weight:600;font-size:0.8rem;color:var(--primary-dk);margin-bottom:8px;">🧬 ${matches.length} Frequenzvorschläge aus DNA-Analyse:</div>`;
     matches.forEach(m=>{
-      const entry=DATA.find(d=>d.de===m.de);if(!entry)return;
-      const hz=getTokens(entry.f).slice(0,3).join(' · ')+' Hz';
+      const entry=fuzzyFindEntry(m.de);if(!entry)return;
+      const eIdx=DATA.indexOf(entry);
+      const freqs=getTokens(entry.f);
+      const hz=freqs.slice(0,3).join(' · ')+' Hz';
       const prio=m.priority||'mittel';
       const prioClr=prio==='hoch'?'#c0392b':prio==='mittel'?'#c9963e':'var(--muted)';
       const card=document.createElement('div');card.className='ai-match-card';
-      card.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div class="ai-match-name">${entry.de}</div><span style="font-size:0.65rem;font-weight:700;color:${prioClr};text-transform:uppercase;">${prio}</span></div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${getTokens(entry.f).length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>`;
-      card.onclick=()=>{
-        const eIdx=DATA.indexOf(entry);
+      card.innerHTML=`
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+          <div class="ai-match-name">${entry.de}</div>
+          <span style="font-size:0.65rem;font-weight:700;color:${prioClr};text-transform:uppercase;">${prio}</span>
+        </div>
+        <div class="ai-match-en">${entry.en}</div>
+        <div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div>
+        <div class="ai-match-reason">${m.reason||''}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
+          <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
+        </div>`;
+      card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};
+      card.querySelector('.card-goto-btn').onclick=(e)=>{
+        e.stopPropagation();
         document.getElementById('search').value='';filterList();
         const feEl=document.getElementById('fe-'+eIdx);
         if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -1385,13 +1417,20 @@ ${entryList}`;
 
     resultEl.innerHTML='<div id="ai-status" style="color:var(--primary-dk);font-weight:600;margin-bottom:6px;">✦ '+matches.length+' Vorschläge gefunden:</div>';
     matches.forEach(m=>{
-      const entry=DATA.find(d=>d.de===m.de);
+      const entry=fuzzyFindEntry(m.de);
       if(!entry)return;
-      const hz=getTokens(entry.f).slice(0,3).join(' · ')+' Hz';
+      const eIdx=DATA.indexOf(entry);
+      const freqs=getTokens(entry.f);
+      const hz=freqs.slice(0,3).join(' · ')+' Hz';
       const card=document.createElement('div');card.className='ai-match-card';
-      card.innerHTML=`<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${getTokens(entry.f).length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>`;
-      card.onclick=()=>{
-        const eIdx=DATA.indexOf(entry);
+      card.innerHTML=`<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${m.reason||''}</div>
+        <div style="display:flex;gap:6px;margin-top:8px;">
+          <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
+          <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
+        </div>`;
+      card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};
+      card.querySelector('.card-goto-btn').onclick=(e)=>{
+        e.stopPropagation();
         document.getElementById('search').value='';filterList();
         const feEl=document.getElementById('fe-'+eIdx);
         if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
