@@ -2910,9 +2910,9 @@ Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen aus den Listen verwende
     const data=await res.json();
     let text=data.content?.[0]?.text||'';
     text=text.replace(/```(?:json)?/g,'').replace(/```/g,'');
-    const jsonMatch=text.match(/\[[\s\S]*?\]/s)||text.match(/\[[\s\S]*/);
+    const i1=text.indexOf('['),i2=text.lastIndexOf(']');
     let matches=[];
-    try{matches=JSON.parse(jsonMatch?jsonMatch[0]:'');}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
+    try{matches=JSON.parse(i1!==-1&&i2!==-1?text.slice(i1,i2+1):'');}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
     if(!Array.isArray(matches)||!matches.length){resultEl.innerHTML='<div style="font-size:0.78rem;color:var(--muted);">Keine spezifischen Einträge gefunden.</div>';return;}
 
     resultEl.innerHTML=`<div style="font-weight:600;font-size:0.8rem;color:var(--primary-dk);margin-bottom:8px;">🧬 ${matches.length} Frequenzvorschläge aus DNA-Analyse:</div>`;
@@ -3036,9 +3036,9 @@ Max. 12 Einträge (mind. 1 pro Sparte). Nur exakte Namen verwenden.`;
     const data=await res.json();
     let text=data.content?.[0]?.text||'';
     text=text.replace(/```(?:json)?/g,'').replace(/```/g,'');
-    const jsonMatch=text.match(/\[[\s\S]*?\]/s)||text.match(/\[[\s\S]*/);
+    const i1=text.indexOf('['),i2=text.lastIndexOf(']');
     let matches=[];
-    try{matches=JSON.parse(jsonMatch?jsonMatch[0]:'');}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
+    try{matches=JSON.parse(i1!==-1&&i2!==-1?text.slice(i1,i2+1):'');}catch(pe){throw new Error('KI-Antwort konnte nicht verarbeitet werden. Bitte erneut versuchen.');}
     if(!Array.isArray(matches)||!matches.length){resultEl.innerHTML='<div id="ai-status">Keine passenden Einträge gefunden.</div>';return;}
 
     resultEl.innerHTML='<div id="ai-status" style="color:var(--primary-dk);font-weight:600;margin-bottom:6px;">✦ '+matches.length+' Vorschläge gefunden:</div>';
