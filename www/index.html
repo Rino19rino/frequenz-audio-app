@@ -2947,24 +2947,29 @@ Format: [{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 
     matches.forEach(m=>{
       const entry=fuzzyFindEntry(m.de);if(!entry)return;
       const eIdx=DATA.indexOf(entry);
+      const isGrabDNA=!!entry.grabovoi;
       const freqs=getTokens(entry.f);
-      const hz=freqs.slice(0,3).join(' · ')+' Hz';
+      const hz=isGrabDNA?entry.f:(freqs.slice(0,3).join(' · ')+' Hz');
       const rel=Math.min(100,Math.max(0,parseInt(m.relevance)||70));
       const relClr=rel>=80?'#27ae60':rel>=60?'#16a085':rel>=40?'#c9963e':'#95a5a6';
       const card=document.createElement('div');card.className='ai-match-card';
+      const dnaBtn=isGrabDNA
+        ?`<button class="card-copy-btn" style="flex:1;background:#c9963e;color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">📋 Heilzahl kopieren</button>`
+        :`<button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>`;
       card.innerHTML=`
         ${catBadgeHTML(entry)}
         <div class="ai-match-name">${entry.de}</div>
         <div class="ai-match-en">${entry.en}</div>
-        <div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div>
+        <div class="ai-match-hz">${hz}${!isGrabDNA&&freqs.length>3?' …':''}</div>
         <div class="ai-match-reason">${m.reason||''}</div>
         <div class="ai-relevance-label"><span>Relevanz</span><strong style="color:${relClr};">${rel}%</strong></div>
         <div class="ai-relevance-wrap"><div class="ai-relevance-bar" style="width:${rel}%;background:${relClr};"></div></div>
         <div style="display:flex;gap:6px;margin-top:8px;">
-          <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
+          ${dnaBtn}
           <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
         </div>`;
-      card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};
+      if(isGrabDNA){card.querySelector('.card-copy-btn').onclick=(e)=>{e.stopPropagation();navigator.clipboard.writeText(entry.f).then(()=>{const b=card.querySelector('.card-copy-btn');b.textContent='✓ Kopiert!';setTimeout(()=>b.textContent='📋 Heilzahl kopieren',2000);});};}
+      else{card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};};
       card.querySelector('.card-goto-btn').onclick=(e)=>{
         e.stopPropagation();
         document.getElementById('search').value='';filterList();
