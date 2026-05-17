@@ -2,100 +2,111 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Dr. Rife Frequenztool – Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Dr. Rife Frequenztool</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Frequenztool">
+<meta name="theme-color" content="#c9a84c">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{
-  --primary:#2d7a4f;--primary-dk:#1e5c3a;--primary-lt:#e8f5ee;
-  --white:#fff;--light:#f8f9fa;--border:#e0e0e0;--muted:#888;--radius:10px;
-  --sol:#7b5ea7;--bin:#2c6e8a;--rife:#2d7a4f;--grabo:#8a5c00;
-}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0f2f5;min-height:100vh;padding-bottom:140px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--bg:#1a1a1a;--bg2:#242424;--bg3:#2e2e2e;--border:#3a3a3a;--text:#e8e8e8;--text2:#aaa;--primary:#c9a84c;--primary-dk:#a8893e;--sol:#7c3aed;--bin:#0e7490;--rife:#2d6a2d;--grab:#92400e;}
+body{background:var(--bg);color:var(--text);font-family:Inter,sans-serif;min-height:100dvh;padding-bottom:160px;}
 
-/* HEADER */
-#hdr{background:var(--primary-dk);color:#fff;padding:12px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,0.2);}
-#hdr img{width:36px;height:36px;}
-#hdr-title{flex:1;}
-#hdr-title h1{font-size:0.95rem;font-weight:700;line-height:1.2;}
-#hdr-title p{font-size:0.65rem;opacity:0.75;}
+/* Header */
+header{background:#111;border-bottom:2px solid var(--primary);padding:12px 16px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;}
+#hdr-logo{width:36px;height:36px;}
+.hdr-text h1{font-family:Orbitron,sans-serif;font-size:13px;color:var(--primary);letter-spacing:1px;}
+.hdr-text p{font-size:10px;color:var(--text2);}
 
-/* GLOBAL SEARCH */
-#search-wrap{padding:12px 16px;background:var(--white);border-bottom:1px solid var(--border);position:sticky;top:60px;z-index:90;}
-#global-search{width:100%;padding:10px 14px;border:2px solid var(--border);border-radius:var(--radius);font-size:0.9rem;outline:none;background:var(--light);}
-#global-search:focus{border-color:var(--primary);}
-#search-count{font-size:0.72rem;color:var(--muted);margin-top:5px;text-align:center;}
+/* Global search */
+.global-search{padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);}
+.global-search input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:15px;}
+.global-search input::placeholder{color:var(--text2);}
+.global-search input:focus{outline:none;border-color:var(--primary);}
 
-/* SPARTEN */
-#sparten{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
-.sparte{border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.1);}
-.sparte-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;color:#fff;font-weight:700;font-size:0.88rem;user-select:none;}
-.sparte-hd.solfeggio{background:linear-gradient(90deg,#7b5ea7,#a07bc4);}
-.sparte-hd.binaural{background:linear-gradient(90deg,#2c6e8a,#4a9ab5);}
-.sparte-hd.rife{background:linear-gradient(90deg,#2d7a4f,#4a9e6e);}
-.sparte-hd.grabovoi{background:linear-gradient(90deg,#8a5c00,#c9963e);}
-.sparte-icon{font-size:1.1rem;}
-.sparte-label{flex:1;}
-.sparte-count{font-size:0.7rem;background:rgba(255,255,255,0.25);border-radius:10px;padding:2px 8px;}
-.sparte-search{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);border-radius:5px;padding:4px 8px;color:#fff;font-size:0.72rem;width:90px;outline:none;margin-left:4px;}
-.sparte-search::placeholder{color:rgba(255,255,255,0.65);}
-.sparte-tog{font-size:0.7rem;margin-left:4px;}
-.sparte-body{display:none;background:var(--white);}
-.sparte.open .sparte-body{display:block;}
+/* Sparte */
+.sparte{margin:10px 12px;border-radius:10px;overflow:hidden;border:1px solid var(--border);}
+.sparte-hd{display:flex;align-items:center;gap:8px;padding:12px 14px;cursor:pointer;user-select:none;}
+.sparte-hd.solfeggio{background:var(--sol);}
+.sparte-hd.binaural{background:var(--bin);}
+.sparte-hd.rife{background:var(--rife);}
+.sparte-hd.grabovoi{background:var(--grab);}
+.sparte-hd .label{font-weight:700;font-size:14px;flex:1;}
+.sparte-hd .count{font-size:12px;opacity:.8;}
+.sparte-hd .arr{font-size:12px;transition:transform .2s;}
+.sparte-hd .arr.open{transform:rotate(180deg);}
+.sparte-search{padding:8px 10px;background:rgba(0,0,0,.3);}
+.sparte-search input{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);border-radius:6px;padding:7px 10px;color:#fff;font-size:13px;}
+.sparte-search input::placeholder{color:rgba(255,255,255,.5);}
+.sparte-search input:focus{outline:none;border-color:rgba(255,255,255,.6);}
+.sparte-body{background:var(--bg2);}
 
-/* FREQUENCY ENTRY */
-.fe{border-bottom:1px solid var(--border);}
-.fe-hd{padding:12px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--white);}
-.fe-hd:active{background:var(--light);}
-.fe-info{flex:1;min-width:0;}
-.fe-name{font-weight:600;font-size:0.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fe-en{font-size:0.68rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fe-play-btn{background:var(--primary);border:none;border-radius:6px;color:#fff;font-size:0.72rem;font-weight:600;padding:6px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.fe-tog{background:none;border:none;color:var(--muted);font-size:0.8rem;cursor:pointer;padding:4px;flex-shrink:0;}
-.fe-body{display:none;padding:10px 14px;background:var(--light);gap:6px;flex-direction:column;}
-.fe.open .fe-body{display:flex;}
-.fe-chip{display:inline-flex;align-items:center;gap:6px;background:var(--white);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-family:monospace;font-size:0.85rem;font-weight:600;color:var(--primary-dk);cursor:pointer;}
-.fe-chip:active{background:var(--primary-lt);}
-.fe-chips-wrap{display:flex;flex-wrap:wrap;gap:6px;}
-.grabovoi-num{font-family:monospace;font-size:1.1rem;font-weight:700;color:#8a4a00;background:#fdf5e6;border:2px solid #e8c87a;border-radius:8px;padding:8px 12px;text-align:center;word-break:break-all;}
-.copy-btn{background:#c9963e;color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:0.75rem;font-weight:600;cursor:pointer;align-self:flex-start;}
-.fe-play-all{background:var(--primary);color:#fff;border:none;border-radius:6px;padding:7px 14px;font-size:0.78rem;font-weight:600;cursor:pointer;width:100%;margin-top:4px;}
+/* Entry */
+.entry{border-bottom:1px solid var(--border);padding:12px 14px;}
+.entry:last-child{border-bottom:none;}
+.entry-name{font-weight:600;font-size:14px;margin-bottom:2px;}
+.entry-sub{font-size:11px;color:var(--text2);margin-bottom:6px;}
+.entry-freq{font-size:16px;font-family:Orbitron,sans-serif;margin-bottom:8px;}
+.entry-freq.solfeggio{color:#a78bfa;}
+.entry-freq.binaural{color:#22d3ee;}
+.entry-freq.rife{color:#86efac;}
+.entry-freq.grabovoi{color:#fbbf24;}
+.entry-actions{display:flex;gap:8px;}
+.btn-play{background:var(--rife);color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;flex:1;}
+.btn-play.solfeggio{background:var(--sol);}
+.btn-play.binaural{background:var(--bin);}
+.btn-play.grabovoi{background:var(--grab);}
+.btn-copy{background:var(--bg3);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:8px 12px;font-size:12px;cursor:pointer;}
 
-/* PLAYER */
-#player{position:fixed;bottom:0;left:0;right:0;background:var(--primary-dk);color:#fff;padding:10px 16px;box-shadow:0 -2px 12px rgba(0,0,0,0.25);z-index:200;}
-#pl-now{font-size:0.72rem;opacity:0.75;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-#pl-hz{font-size:1.1rem;font-weight:700;margin-bottom:6px;}
-#pl-controls{display:flex;align-items:center;gap:8px;}
-#pl-play{background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:50%;width:38px;height:38px;color:#fff;font-size:1rem;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
-#pl-vol{flex:1;accent-color:#fff;}
-#pl-stop{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:6px;color:#fff;font-size:0.7rem;padding:5px 10px;cursor:pointer;}
-.empty-sparte{padding:12px 14px;color:var(--muted);font-size:0.78rem;font-style:italic;text-align:center;}
+/* Player bar */
+#player{position:fixed;bottom:0;left:0;right:0;background:#111;border-top:2px solid var(--primary);padding:10px 16px;z-index:200;padding-bottom:calc(10px + env(safe-area-inset-bottom));}
+#now-playing{font-size:11px;color:var(--text2);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+#now-hz{font-family:Orbitron,sans-serif;font-size:20px;color:var(--primary);margin-bottom:8px;}
+.player-row{display:flex;align-items:center;gap:10px;}
+#btn-stop{background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:8px 14px;font-size:13px;cursor:pointer;}
+#vol-wrap{display:flex;align-items:center;gap:6px;flex:1;}
+#vol-wrap span{font-size:11px;color:var(--text2);}
+#vol{flex:1;accent-color:var(--primary);}
+.wave-sel{display:flex;gap:6px;}
+.wave-btn{background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);padding:5px 10px;font-size:11px;cursor:pointer;}
+.wave-btn.active{background:var(--primary);color:#111;border-color:var(--primary);font-weight:700;}
 </style>
 </head>
 <body>
-
-<header id="hdr">
-  <img src="logo.svg" alt="Logo">
-  <div id="hdr-title">
-    <h1>Dr. Rife Frequenztool</h1>
-    <p>Frequenztherapie &middot; Mobil</p>
+<header>
+  <img id="hdr-logo" src="logo.svg" alt="Logo">
+  <div class="hdr-text">
+    <h1>DR. RIFE FREQUENZTOOL</h1>
+    <p>Kathrin Frinke</p>
   </div>
 </header>
 
-<div id="search-wrap">
-  <input id="global-search" type="search" placeholder="🔍 Suche in allen 4 Sparten…" oninput="onGlobalSearch(this.value)">
-  <div id="search-count">1655 Einträge</div>
+<div class="global-search">
+  <input type="search" id="global-q" placeholder="&#128269; Alle Sparten durchsuchen – z.B. Tinnitus, Schmerz ..." oninput="filterAll()">
 </div>
 
 <div id="sparten"></div>
 
 <div id="player">
-  <div id="pl-now">– Kein Eintrag –</div>
-  <div id="pl-hz">– Hz</div>
-  <div id="pl-controls">
-    <button id="pl-play" onclick="togglePlay()">▶</button>
-    <input id="pl-vol" type="range" min="0" max="1" step="0.01" value="0.5" oninput="setVol(this.value)">
-    <button id="pl-stop" onclick="stopAll()">■ Stop</button>
+  <div id="now-playing">– Kein Eintrag –</div>
+  <div id="now-hz">– Hz</div>
+  <div class="player-row">
+    <button id="btn-stop" onclick="stopAll()">&#9646;&#9646; Stop</button>
+    <div id="vol-wrap">
+      <span>&#128266;</span>
+      <input type="range" id="vol" min="0" max="100" value="50" oninput="setVol(this.value)">
+      <span id="vol-pct">50%</span>
+    </div>
+  </div>
+  <div class="wave-sel" style="margin-top:8px;">
+    <button class="wave-btn active" id="wb-sine" onclick="setWave('sine',this)">Sinus</button>
+    <button class="wave-btn" id="wb-square" onclick="setWave('square',this)">Rechteck</button>
+    <button class="wave-btn" id="wb-triangle" onclick="setWave('triangle',this)">Dreieck</button>
+    <button class="wave-btn" id="wb-sawtooth" onclick="setWave('sawtooth',this)">Sage</button>
   </div>
 </div>
 
@@ -1769,166 +1780,108 @@ const DATA=[
   {de:'Zysten und Fisteln des Halses laterall Zysten und Fisteln des Halses lateral',en:'Zysten und Fisteln des Halses laterall Zysten und Fisteln des Halses lateral',grabovoi:true,f:'514854214'},
 ];
 
-// ── Audio ──────────────────────────────────────
-let ctx=null,oscillator=null,oscillatorR=null,gainNode=null,gainNodeR=null;
-let currentEntry=null,currentFreqs=[],currentFreqIdx=0,playing=false,volume=0.5;
-
-function getCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();return ctx;}
-
-function stopAll(){
-  if(oscillator){try{oscillator.stop();}catch(e){}oscillator=null;}
-  if(oscillatorR){try{oscillatorR.stop();}catch(e){}oscillatorR=null;}
-  playing=false;
-  document.getElementById('pl-play').textContent='▶';
-}
-
-function playHz(hz,entry){
+// ── Audio ──────────────────────────────────────────────
+let ctx=null,osc=null,gain=null,oscR=null,gainR=null,waveType='sine',volVal=0.5;
+function getCtx(){if(!ctx)ctx=new(window.AudioContext||window.webkitAudioContext)();if(ctx.state==='suspended')ctx.resume();return ctx;}
+function stopAll(){if(osc){try{osc.stop();}catch(e){}osc=null;}if(oscR){try{oscR.stop();}catch(e){}oscR=null;}if(gain){gain.disconnect();gain=null;}if(gainR){gainR.disconnect();gainR=null;}document.getElementById('now-playing').textContent='– Kein Eintrag –';document.getElementById('now-hz').textContent='– Hz';}
+function playEntry(entry){
   stopAll();
   const c=getCtx();
-  gainNode=c.createGain();gainNode.gain.value=volume;
-  if(entry&&entry.binaural){
+  const freqVal=entry.grabovoi?432:parseFloat(entry.f.toString().split(',')[0]);
+  if(entry.binaural){
+    const beatFreq=parseFloat(entry.f.toString().split(',')[0])||10;
+    const baseFreq=200;
     const panL=c.createStereoPanner();panL.pan.value=-1;
     const panR=c.createStereoPanner();panR.pan.value=1;
-    oscillator=c.createOscillator();oscillator.frequency.value=hz;oscillator.connect(panL);panL.connect(gainNode);
-    const diff=entry.binauralDiff||4;
-    gainNodeR=c.createGain();gainNodeR.gain.value=volume;
-    oscillatorR=c.createOscillator();oscillatorR.frequency.value=hz+diff;oscillatorR.connect(panR);panR.connect(gainNodeR);gainNodeR.connect(c.destination);
-    oscillator.start();oscillatorR.start();
+    gain=c.createGain();gain.gain.value=volVal;
+    gainR=c.createGain();gainR.gain.value=volVal;
+    osc=c.createOscillator();osc.type=waveType;osc.frequency.value=baseFreq;
+    oscR=c.createOscillator();oscR.type=waveType;oscR.frequency.value=baseFreq+beatFreq;
+    osc.connect(panL);panL.connect(gain);gain.connect(c.destination);
+    oscR.connect(panR);panR.connect(gainR);gainR.connect(c.destination);
+    osc.start();oscR.start();
+    document.getElementById('now-hz').textContent=beatFreq+' Hz Beat';
   } else {
-    oscillator=c.createOscillator();oscillator.frequency.value=hz;oscillator.connect(gainNode);
-    oscillator.start();
+    gain=c.createGain();gain.gain.value=volVal;
+    osc=c.createOscillator();osc.type=waveType;osc.frequency.value=Math.min(freqVal,20000);
+    osc.connect(gain);gain.connect(c.destination);
+    osc.start();
+    document.getElementById('now-hz').textContent=(entry.grabovoi?'432':freqVal)+' Hz';
   }
-  gainNode.connect(c.destination);
-  playing=true;
-  document.getElementById('pl-play').textContent='⏸';
-  document.getElementById('pl-now').textContent=(entry?entry.de:'Frequenz')+' – '+hz+' Hz';
-  document.getElementById('pl-hz').textContent=hz+' Hz';
+  document.getElementById('now-playing').textContent=entry.de;
 }
+function setVol(v){volVal=v/100;if(gain)gain.gain.value=volVal;if(gainR)gainR.gain.value=volVal;document.getElementById('vol-pct').textContent=v+'%';}
+function setWave(w,btn){waveType=w;document.querySelectorAll('.wave-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');if(osc)osc.type=w;if(oscR)oscR.type=w;}
 
-function togglePlay(){
-  if(playing){stopAll();}
-  else if(currentFreqs.length){playHz(currentFreqs[currentFreqIdx],currentEntry);}
-}
-
-function setVol(v){
-  volume=parseFloat(v);
-  if(gainNode)gainNode.gain.value=volume;
-  if(gainNodeR)gainNodeR.gain.value=volume;
-}
-
-function getTokens(f){return String(f).split(/[\s,;]+/).map(x=>parseFloat(x)).filter(x=>!isNaN(x)&&x>0);}
-
-function playEntry(entry){
-  currentEntry=entry;
-  currentFreqs=getTokens(entry.f);
-  currentFreqIdx=0;
-  if(currentFreqs.length)playHz(currentFreqs[0],entry);
-}
-
-function playAllEntry(entry){
-  currentEntry=entry;
-  currentFreqs=getTokens(entry.f);
-  currentFreqIdx=0;
-  if(!currentFreqs.length)return;
-  playHz(currentFreqs[0],entry);
-  let i=1;
-  function next(){
-    if(i>=currentFreqs.length||!playing)return;
-    setTimeout(()=>{if(!playing)return;playHz(currentFreqs[i],entry);i++;next();},3000);
-  }
-  next();
-}
-
-// ── Render ─────────────────────────────────────
+// ── Groups ─────────────────────────────────────────────
 const GROUPS=[
   {key:'solfeggio',label:'Solfeggio-Frequenzen',icon:'🎵',cls:'solfeggio',filter:d=>d.de.startsWith('Solfeggio')},
   {key:'binaural', label:'Fibonacci Binaural Beats',icon:'🧠',cls:'binaural', filter:d=>!!d.binaural&&!d.grabovoi},
   {key:'rife',     label:'Dr. Rife Frequenzen',icon:'⚡',cls:'rife',     filter:d=>!d.de.startsWith('Solfeggio')&&!d.binaural&&!d.grabovoi},
-  {key:'grabovoi', label:'Grabovoi Heilzahlen',icon:'🔢',cls:'grabovoi', filter:d=>!!d.grabovoi},
+  {key:'grabovoi', label:'Grabovoi Heilzahlen',icon:'🔢',cls:'grabovoi', filter:d=>!!d.grabovoi}
 ];
+const state={queries:{}};
+GROUPS.forEach(g=>{state.queries[g.key]='';});
 
-function buildSparten(filteredData){
-  const wrap=document.getElementById('sparten');
-  wrap.innerHTML='';
-  const isSearch=filteredData.length<DATA.length;
+function entryHTML(entry,cls){
+  const isGrab=!!entry.grabovoi;
+  const freqDisplay=isGrab?entry.f:entry.f;
+  return `<div class="entry">
+    <div class="entry-name">${entry.de}</div>
+    <div class="entry-sub">${entry.en||''}</div>
+    <div class="entry-freq ${cls}">${freqDisplay} ${isGrab?'':' Hz'}</div>
+    <div class="entry-actions">
+      <button class="btn-play ${cls}" onclick='playEntry(${JSON.stringify(entry)})'>&#9654; Abspielen</button>
+      ${isGrab?`<button class="btn-copy" onclick="navigator.clipboard.writeText('${entry.f}').then(()=>{this.textContent='✓ Kopiert';setTimeout(()=>this.textContent='📋 Zahl',1500)})">📋 Zahl</button>`:''}
+    </div>
+  </div>`;
+}
 
+function buildSparten(globalQ){
+  const container=document.getElementById('sparten');
+  container.innerHTML='';
   GROUPS.forEach(g=>{
-    const items=filteredData.filter(g.filter);
-    if(isSearch&&!items.length)return; // hide empty sparten during search
-
-    const sparte=document.createElement('div');sparte.className='sparte'+(isSearch?' open':'');
-    const hd=document.createElement('div');hd.className='sparte-hd '+g.cls;
-    hd.innerHTML=`<span class="sparte-icon">${g.icon}</span><span class="sparte-label">${g.label}</span><span class="sparte-count">${items.length}</span><span class="sparte-tog">▼</span>`;
-    hd.onclick=()=>{sparte.classList.toggle('open');hd.querySelector('.sparte-tog').textContent=sparte.classList.contains('open')?'▲':'▼';};
-
-    // Per-sparte search
-    const sinp=document.createElement('input');sinp.type='text';sinp.placeholder='Suche…';sinp.className='sparte-search';
-    sinp.onclick=e=>e.stopPropagation();
-    sinp.oninput=()=>{
-      const q=sinp.value.trim().toLowerCase();
-      const all=DATA.filter(g.filter);
-      const res=q?all.filter(d=>d.de.toLowerCase().includes(q)||d.en.toLowerCase().includes(q)||String(d.f).includes(q)):all;
-      body.innerHTML='';renderItems(res,body,g);
-      if(!sparte.classList.contains('open')){sparte.classList.add('open');hd.querySelector('.sparte-tog').textContent='▲';}
-    };
-    hd.querySelector('.sparte-tog').before(sinp);
-
-    const body=document.createElement('div');body.className='sparte-body';
-    if(!items.length){body.innerHTML=\`<div class="empty-sparte">Keine Treffer</div>\`;}
-    else renderItems(items,body,g);
-
-    sparte.appendChild(hd);sparte.appendChild(body);
-    wrap.appendChild(sparte);
-  });
-  document.getElementById('search-count').textContent=filteredData.length+' Einträge';
-}
-
-function renderItems(data,wrap,g){
-  wrap.innerHTML='';
-  data.forEach(item=>{
-    const fe=document.createElement('div');fe.className='fe';
-    const hd=document.createElement('div');hd.className='fe-hd';
-
-    if(item.grabovoi){
-      hd.innerHTML=\`<div class="fe-info"><div class="fe-name">\${item.de}</div><div class="fe-en">\${item.en}</div></div>\`;
-      const tog=document.createElement('button');tog.className='fe-tog';tog.textContent='▼';
-      tog.onclick=e=>{e.stopPropagation();fe.classList.toggle('open');tog.textContent=fe.classList.contains('open')?'▲':'▼';};
-      hd.appendChild(tog);
-      hd.onclick=()=>{fe.classList.toggle('open');fe.querySelector('.fe-tog').textContent=fe.classList.contains('open')?'▲':'▼';};
-      const body=document.createElement('div');body.className='fe-body';
-      body.innerHTML=\`<div class="grabovoi-num">\${item.f}</div><button class="copy-btn" onclick="navigator.clipboard.writeText('\${item.f}').then(()=>{this.textContent='✓ Kopiert!';setTimeout(()=>this.textContent='📋 Zahl kopieren',1500)})">📋 Zahl kopieren</button>\`;
-      fe.appendChild(hd);fe.appendChild(body);
-    } else {
-      const tokens=getTokens(item.f);
-      hd.innerHTML=\`<div class="fe-info"><div class="fe-name">\${item.de}</div><div class="fe-en">\${item.en}</div></div>\`;
-      const playBtn=document.createElement('button');playBtn.className='fe-play-btn';playBtn.textContent='▶ Play';
-      playBtn.onclick=e=>{e.stopPropagation();playEntry(item);};
-      const tog=document.createElement('button');tog.className='fe-tog';tog.textContent='▼';
-      tog.onclick=e=>{e.stopPropagation();fe.classList.toggle('open');tog.textContent=fe.classList.contains('open')?'▲':'▼';};
-      hd.appendChild(playBtn);hd.appendChild(tog);
-      hd.onclick=()=>{fe.classList.toggle('open');fe.querySelector('.fe-tog').textContent=fe.classList.contains('open')?'▲':'▼';};
-      const body=document.createElement('div');body.className='fe-body';
-      const chipsWrap=document.createElement('div');chipsWrap.className='fe-chips-wrap';
-      tokens.forEach(hz=>{
-        const chip=document.createElement('div');chip.className='fe-chip';chip.textContent=hz+' Hz';
-        chip.onclick=()=>playHz(hz,item);chipsWrap.appendChild(chip);
-      });
-      const allBtn=document.createElement('button');allBtn.className='fe-play-all';allBtn.textContent='▶ Alle nacheinander abspielen';
-      allBtn.onclick=()=>playAllEntry(item);
-      body.appendChild(chipsWrap);body.appendChild(allBtn);
-      fe.appendChild(hd);fe.appendChild(body);
+    const q=(globalQ||state.queries[g.key]||'').toLowerCase().trim();
+    let items=DATA.filter(g.filter);
+    if(q){
+      const words=q.split(/\s+/).filter(w=>w.length>1);
+      items=items.filter(d=>words.some(w=>d.de.toLowerCase().includes(w)||(d.en||'').toLowerCase().includes(w)));
     }
-    wrap.appendChild(fe);
+    const div=document.createElement('div');
+    div.className='sparte';
+    const open=!!q&&items.length>0;
+    div.innerHTML=`
+      <div class="sparte-hd ${g.cls}" onclick="toggleSparte('${g.key}')">
+        <span>${g.icon}</span>
+        <span class="label">${g.label}</span>
+        <span class="count">${items.length} Einträge</span>
+        <span class="arr${open?' open':''}" id="arr-${g.key}">&#9660;</span>
+      </div>
+      <div class="sparte-search" id="search-${g.key}" style="display:${open||sparteOpen[g.key]?'block':'none'}">
+        <input type="search" placeholder="Suche in ${g.label}..." value="${state.queries[g.key]}" oninput="filterSparte('${g.key}',this.value)">
+      </div>
+      <div class="sparte-body" id="body-${g.key}" style="display:${open||sparteOpen[g.key]?'block':'none'}">
+        ${items.slice(0,100).map(e=>entryHTML(e,g.cls)).join('')}
+        ${items.length>100?`<div style="padding:10px 14px;color:var(--text2);font-size:12px;">${items.length-100} weitere Einträge – Suche verfeinern</div>`:''}
+      </div>`;
+    container.appendChild(div);
   });
 }
 
-function onGlobalSearch(q){
-  const ql=q.trim().toLowerCase();
-  const filtered=ql?DATA.filter(d=>d.de.toLowerCase().includes(ql)||d.en.toLowerCase().includes(ql)||String(d.f).includes(ql)):DATA;
-  buildSparten(filtered);
+const sparteOpen={solfeggio:false,binaural:false,rife:false,grabovoi:false};
+function toggleSparte(key){
+  sparteOpen[key]=!sparteOpen[key];
+  const show=sparteOpen[key];
+  document.getElementById('search-'+key).style.display=show?'block':'none';
+  document.getElementById('body-'+key).style.display=show?'block':'none';
+  const arr=document.getElementById('arr-'+key);
+  if(arr)show?arr.classList.add('open'):arr.classList.remove('open');
 }
+function filterSparte(key,val){state.queries[key]=val;buildSparten('');}
+function filterAll(){buildSparten(document.getElementById('global-q').value);}
 
-buildSparten(DATA);
+buildSparten('');
+if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js');}
 </script>
 </body>
 </html>
