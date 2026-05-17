@@ -2,7 +2,7 @@
   "name": "Dr. Rife Frequenztool",
   "short_name": "Frequenztool",
   "description": "Rife-Frequenzen, Solfeggio, Binaural Beats & Grabovoi-Heilzahlen",
-  "start_url": "/frequenz-audio-app/",
+  "start_url": "/frequenz-audio-app/mobile.html",
   "display": "standalone",
   "background_color": "#1a1a1a",
   "theme_color": "#c9a84c",
