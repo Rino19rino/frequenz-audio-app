@@ -3108,16 +3108,21 @@ Beispiel: ["Hüftgelenk","Arthrose","Gelenkschmerz","Entzündung","Knorpel","Hü
       const cat=entry.de.startsWith('Solfeggio')?'solfeggio':entry.binaural?'binaural':entry.grabovoi?'grabovoi':'rife';
       const reason=fallback?'Allgemeine Empfehlung für diese Sparte.':reasons[cat];
       const eIdx=DATA.indexOf(entry);
+      const isGrab=!!entry.grabovoi;
       const freqs=getTokens(entry.f);
-      const hz=freqs.slice(0,3).join(' · ')+' Hz';
+      const hz=isGrab?entry.f:freqs.slice(0,3).join(' · ')+' Hz';
       const card=document.createElement('div');card.className='ai-match-card';
       const relClr=rel>=80?'#27ae60':rel>=60?'#16a085':rel>=40?'#c9963e':'#95a5a6';
-      card.innerHTML=`${catBadgeHTML(entry)}<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}${freqs.length>3?' …':''}</div><div class="ai-match-reason">${reason}</div><div class="ai-relevance-label"><span>Relevanz</span><strong style="color:${relClr};">${rel}%</strong></div><div class="ai-relevance-wrap"><div class="ai-relevance-bar" style="width:${rel}%;background:${relClr};"></div></div>
+      const btns=isGrab
+        ?`<button class="card-copy-btn" style="flex:1;background:#c9963e;color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">📋 Heilzahl kopieren</button>`
+        :`<button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>`;
+      card.innerHTML=`${catBadgeHTML(entry)}<div class="ai-match-name">${entry.de}</div><div class="ai-match-en">${entry.en}</div><div class="ai-match-hz">${hz}</div><div class="ai-match-reason">${reason}</div><div class="ai-relevance-label"><span>Relevanz</span><strong style="color:${relClr};">${rel}%</strong></div><div class="ai-relevance-wrap"><div class="ai-relevance-bar" style="width:${rel}%;background:${relClr};"></div></div>
         <div style="display:flex;gap:6px;margin-top:8px;">
-          <button class="card-play-all-btn" style="flex:1;background:var(--primary);color:#fff;border:none;border-radius:6px;padding:5px 8px;font-size:0.75rem;font-weight:600;cursor:pointer;">▶ Alle abspielen</button>
+          ${btns}
           <button class="card-goto-btn" style="flex:1;background:var(--light);color:var(--primary-dk);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:0.75rem;cursor:pointer;">↓ In Liste öffnen</button>
         </div>`;
-      card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};
+      if(isGrab){card.querySelector('.card-copy-btn').onclick=(e)=>{e.stopPropagation();navigator.clipboard.writeText(entry.f).then(()=>{const b=card.querySelector('.card-copy-btn');b.textContent='✓ Kopiert!';setTimeout(()=>b.textContent='📋 Heilzahl kopieren',2000);});};}
+      else{card.querySelector('.card-play-all-btn').onclick=(e)=>{e.stopPropagation();playAllFreqs(entry,eIdx);};}
       card.querySelector('.card-goto-btn').onclick=(e)=>{
         e.stopPropagation();
         document.getElementById('search').value='';filterList();
@@ -3209,11 +3214,14 @@ function renderItems(data,list){
     // Header
     const hd=document.createElement('div');hd.className='fe-hd';
     hd.innerHTML=`<div class="fe-name">${item.de}</div><div class="fe-en">${item.en}</div>`;
-    const allBtn=document.createElement('button');allBtn.className='fe-play-all';allBtn.textContent='▶ Alle';allBtn.title='Alle Frequenzen nacheinander abspielen';
-    allBtn.onclick=e=>{e.stopPropagation();playAllFreqs(item,eIdx);};
+    if(!item.grabovoi){
+      const allBtn=document.createElement('button');allBtn.className='fe-play-all';allBtn.textContent='▶ Alle';allBtn.title='Alle Frequenzen nacheinander abspielen';
+      allBtn.onclick=e=>{e.stopPropagation();playAllFreqs(item,eIdx);};
+      hd.appendChild(allBtn);
+    }
     const tog=document.createElement('button');tog.className='fe-toggle';tog.textContent='▼';
     tog.onclick=e=>{e.stopPropagation();fe.classList.toggle('open');tog.textContent=fe.classList.contains('open')?'▲':'▼';};
-    hd.appendChild(allBtn);hd.appendChild(tog);
+    hd.appendChild(tog);
     hd.onclick=()=>{fe.classList.toggle('open');tog.textContent=fe.classList.contains('open')?'▲':'▼';};
     fe.appendChild(hd);
 
