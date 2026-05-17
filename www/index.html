@@ -2823,7 +2823,8 @@ function gkDownload(){
   if(!activeClientId)return;
   const html=gkLoad(activeClientId);if(!html)return;
   const c=clientStore.get(activeClientId);
-  const full=`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Gene Keys – ${c?c.name:''}</title><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Inter,sans-serif;background:#080810;color:#e0e0f0;padding:20px;}</style></head><body>${html}</body></html>`;
+  const gkCss='<'+'style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Inter,sans-serif;background:#080810;color:#e0e0f0;padding:20px;}<'+'/style>';
+  const full='<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Gene Keys \u2013 '+(c?c.name:'')+'</title><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">'+gkCss+'</head><body>'+html+'</body></html>';
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([full],{type:'text/html'}));
   a.download=`GeneKeys_${c?c.name.replace(/\s/g,'_'):'Profil'}.html`;a.click();
 }
