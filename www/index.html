@@ -2265,6 +2265,7 @@ function stopTone(stopMusicToo){
 }
 
 function playFreq(hz,entry,chipIdx,dur){
+  if(entry&&entry.grabovoi)return; // Grabovoi: kein Audio
   const savedSeqIdx=activeSeqEIdx;
   stopTone(false);
   activeSeqEIdx=savedSeqIdx;
@@ -2650,6 +2651,7 @@ function clearAllHistory(){
 function replayFromHistory(s){
   const entry=DATA.find(d=>d.de===s.de);
   if(!entry){alert('Eintrag nicht mehr in der Datenbank gefunden.');return;}
+  if(entry.grabovoi)return; // Grabovoi: kein Audio
   const hz=parseFloat(s.hz);
   if(isNaN(hz))return;
   const tokens=getTokens(entry.f);
@@ -2703,10 +2705,10 @@ function renderHistory(){
           </div>
         </div>
         <div class="sh-row-actions">
-          <button class="sh-play-btn">▶ Start</button>
+          ${DATA.find(d=>d.de===s.de)?.grabovoi?'':`<button class="sh-play-btn">▶ Start</button>`}
           <button class="sh-del-btn">× Löschen</button>
         </div>`;
-      row.querySelector('.sh-play-btn').onclick=()=>replayFromHistory(s);
+      const shPlay=row.querySelector('.sh-play-btn');if(shPlay)shPlay.onclick=()=>replayFromHistory(s);
       row.querySelector('.sh-del-btn').onclick=()=>deleteSession(globalIdx);
       listEl.appendChild(row);
     });
