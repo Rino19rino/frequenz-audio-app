@@ -174,6 +174,9 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .grabovoi-copy-btn:hover{background:#a07820;}
 .grabovoi-hint{font-size:0.68rem;color:var(--muted);font-style:italic;margin-top:4px;text-align:center;}
 .sparte-icon{font-size:1.2rem;}
+.sparte-search{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.45);border-radius:5px;padding:3px 9px;color:#fff;font-size:0.73rem;width:110px;outline:none;margin-left:auto;}
+.sparte-search::placeholder{color:rgba(255,255,255,0.65);}
+.sparte-search:focus{background:rgba(255,255,255,0.28);}
 .sparte-label{flex:1;}
 .sparte-count{font-size:0.78rem;opacity:0.8;font-weight:400;}
 .sparte-tog{font-size:0.85rem;opacity:0.8;transition:transform 0.2s;}
@@ -3158,6 +3161,18 @@ function buildList(data){
     hd.onclick=()=>{sparte.classList.toggle('open');hd.querySelector('.sparte-tog').textContent=sparte.classList.contains('open')?'▲':'▼';};
     const body=document.createElement('div');body.className='sparte-body';
     renderItems(items,body);
+    // Sparten-Suchfeld
+    const sparteInp=document.createElement('input');
+    sparteInp.type='text';sparteInp.placeholder='🔍 Suche…';sparteInp.className='sparte-search';
+    sparteInp.onclick=e=>e.stopPropagation();
+    sparteInp.oninput=()=>{
+      const q=sparteInp.value.trim().toLowerCase();
+      const allInSparte=DATA.filter(g.filter);
+      const filtered=q?allInSparte.filter(d=>d.de.toLowerCase().includes(q)||d.en.toLowerCase().includes(q)||String(d.f).includes(q)):allInSparte;
+      body.innerHTML='';renderItems(filtered,body);
+      if(!sparte.classList.contains('open')){sparte.classList.add('open');hd.querySelector('.sparte-tog').textContent='▲';}
+    };
+    hd.querySelector('.sparte-tog').before(sparteInp);
     sparte.appendChild(hd);sparte.appendChild(body);
     list.appendChild(sparte);
   });
