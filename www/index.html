@@ -84,6 +84,25 @@ body{font-family:'Inter',system-ui,sans-serif;font-size:14px;background:var(--bg
 .cc-btn{flex:1;padding:6px;border-radius:var(--radius-sm);font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--light);color:var(--text2);transition:all 0.12s;font-family:'Inter',sans-serif;}
 .cc-btn:hover{border-color:var(--primary);color:var(--primary);}
 .cc-btn.danger:hover{border-color:var(--danger);color:var(--danger);background:#fdf2f2;}
+/* Gene Keys */
+.gk-section{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.gk-status{font-size:0.72rem;color:var(--muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.gk-status-dot{width:7px;height:7px;border-radius:50%;background:#c9963e;flex-shrink:0;}
+.gk-status-dot.done{background:#27ae60;}
+.gk-btn{width:100%;padding:6px;border-radius:var(--radius-sm);font-size:0.72rem;font-weight:600;cursor:pointer;border:1px solid #c9a84c;background:linear-gradient(135deg,#1a1200,#2a1e00);color:#c9a84c;transition:all 0.12s;font-family:'Inter',sans-serif;margin-bottom:4px;}
+.gk-btn:hover{background:linear-gradient(135deg,#2a1e00,#3a2a00);border-color:#e8c87a;}
+.gk-btn-sm{width:100%;padding:5px;border-radius:var(--radius-sm);font-size:0.68rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--light);color:var(--muted);font-family:'Inter',sans-serif;}
+.gk-btn-sm:hover{border-color:var(--primary);color:var(--primary);}
+/* GK Modal */
+#gk-modal{display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.85);overflow-y:auto;}
+#gk-modal.open{display:block;}
+#gk-modal-inner{max-width:900px;margin:30px auto;background:#0d0d18;border:1px solid #2a1a5a;border-radius:16px;overflow:hidden;}
+.gk-modal-hd{background:linear-gradient(135deg,#1a0a3a,#0d1020);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2a1a5a;}
+.gk-modal-hd h2{font-family:'Orbitron',monospace;font-size:1rem;color:#c9a84c;letter-spacing:2px;}
+.gk-modal-actions{display:flex;gap:8px;}
+.gk-dl-btn{padding:6px 14px;border-radius:6px;font-size:0.75rem;font-weight:600;cursor:pointer;border:1px solid #c9a84c;background:rgba(201,168,76,0.1);color:#c9a84c;}
+.gk-close-btn{padding:6px 14px;border-radius:6px;font-size:0.75rem;cursor:pointer;border:1px solid var(--border);background:var(--light);color:var(--muted);}
+#gk-modal-body{padding:24px;}
 
 /* Treatment history */
 #sb-history{display:flex;flex-direction:column;flex:1;overflow:hidden;}
@@ -345,9 +364,17 @@ select.pp-sel:focus{border-color:var(--primary);}
         <div class="cc-field"><span class="cc-icon">📞</span><span class="cc-val" id="cc-tel"></span></div>
         <div class="cc-field"><span class="cc-icon">📍</span><span class="cc-val" id="cc-address"></span></div>
         <div class="cc-field" id="cc-notes-wrap" style="display:none"><span class="cc-icon">📝</span><span class="cc-val" id="cc-notes"></span></div>
+        <div class="cc-field" id="cc-gebzeit-wrap" style="display:none"><span class="cc-icon">🕐</span><span class="cc-val" id="cc-gebzeit"></span></div>
+        <div class="cc-field" id="cc-gebort-wrap" style="display:none"><span class="cc-icon">🏡</span><span class="cc-val" id="cc-gebort"></span></div>
         <div class="cc-actions">
           <button class="cc-btn" onclick="editActiveClient()">Bearbeiten</button>
           <button class="cc-btn danger" onclick="deleteActiveClient()">Löschen</button>
+        </div>
+        <div class="gk-section">
+          <div class="gk-status"><span class="gk-status-dot" id="gk-dot"></span><span id="gk-status-txt">Kein Gene Keys Profil</span></div>
+          <button class="gk-btn" onclick="gkGenerate()">✦ Gene Keys Profil erstellen</button>
+          <button class="gk-btn-sm" id="gk-view-btn" onclick="gkShowModal()" style="display:none">◎ Profil anzeigen</button>
+          <button class="gk-btn-sm" id="gk-del-btn" onclick="gkDeleteProfile()" style="display:none;margin-top:3px;color:#c0392b;border-color:#c0392b;">✕ Profil löschen</button>
         </div>
       </div>
     </div>
@@ -529,9 +556,17 @@ select.pp-sel:focus{border-color:var(--primary);}
         <input class="cm-inp" type="date" id="cm-dob">
       </div>
       <div class="cm-field">
-        <label class="cm-lbl">Telefon</label>
-        <input class="cm-inp" type="tel" id="cm-tel" placeholder="+49 ...">
+        <label class="cm-lbl">Geburtszeit <span style="color:var(--muted);font-size:0.7rem;">(optional)</span></label>
+        <input class="cm-inp" type="time" id="cm-gebzeit">
       </div>
+    </div>
+    <div class="cm-field">
+      <label class="cm-lbl">Geburtsort <span style="color:var(--muted);font-size:0.7rem;">(optional · für Gene Keys)</span></label>
+      <input class="cm-inp" type="text" id="cm-gebort" placeholder="z.B. München, Hamburg, Wien …">
+    </div>
+    <div class="cm-field">
+      <label class="cm-lbl">Telefon</label>
+      <input class="cm-inp" type="tel" id="cm-tel" placeholder="+49 ...">
     </div>
     <div class="cm-field">
       <label class="cm-lbl">E-Mail</label>
@@ -2581,6 +2616,10 @@ function renderSidebar(){
     document.getElementById('cc-email').textContent=client.email||'–';
     document.getElementById('cc-tel').textContent=client.tel||'–';
     document.getElementById('cc-address').textContent=client.address||'–';
+    const gzWrap=document.getElementById('cc-gebzeit-wrap');const goWrap=document.getElementById('cc-gebort-wrap');
+    if(client.gebzeit){document.getElementById('cc-gebzeit').textContent=client.gebzeit+' Uhr';gzWrap.style.display='flex';}else gzWrap.style.display='none';
+    if(client.gebort){document.getElementById('cc-gebort').textContent=client.gebort;goWrap.style.display='flex';}else goWrap.style.display='none';
+    updateGkUI();
     const notesWrap=document.getElementById('cc-notes-wrap');
     if(client.notes){document.getElementById('cc-notes').textContent=client.notes;notesWrap.style.display='flex';}
     else notesWrap.style.display='none';
@@ -2722,17 +2761,17 @@ function openClientModal(editId){
   document.getElementById('client-modal').classList.add('open');
   document.getElementById('cm-edit-id').value=editId||'';
   document.getElementById('cm-title').textContent=editId?'Klient bearbeiten':'Neuen Klienten anlegen';
-  const ids=['cm-name','cm-dob','cm-email','cm-tel','cm-address','cm-notes'];
+  const ids=['cm-name','cm-dob','cm-gebzeit','cm-gebort','cm-email','cm-tel','cm-address','cm-notes'];
   if(editId){
     const c=clientStore.get(editId);
-    if(c){document.getElementById('cm-name').value=c.name||'';document.getElementById('cm-dob').value=c.dob||'';document.getElementById('cm-email').value=c.email||'';document.getElementById('cm-tel').value=c.tel||'';document.getElementById('cm-address').value=c.address||'';document.getElementById('cm-notes').value=c.notes||'';}
+    if(c){document.getElementById('cm-name').value=c.name||'';document.getElementById('cm-dob').value=c.dob||'';document.getElementById('cm-gebzeit').value=c.gebzeit||'';document.getElementById('cm-gebort').value=c.gebort||'';document.getElementById('cm-email').value=c.email||'';document.getElementById('cm-tel').value=c.tel||'';document.getElementById('cm-address').value=c.address||'';document.getElementById('cm-notes').value=c.notes||'';}
   } else ids.forEach(id=>document.getElementById(id).value='');
 }
 function closeClientModal(){document.getElementById('client-modal').classList.remove('open');}
 function saveClient(){
   const name=document.getElementById('cm-name').value.trim();
   if(!name){alert('Bitte einen Namen eingeben.');return;}
-  const d={name,dob:document.getElementById('cm-dob').value,email:document.getElementById('cm-email').value.trim(),tel:document.getElementById('cm-tel').value.trim(),address:document.getElementById('cm-address').value.trim(),notes:document.getElementById('cm-notes').value.trim()};
+  const d={name,dob:document.getElementById('cm-dob').value,gebzeit:document.getElementById('cm-gebzeit').value,gebort:document.getElementById('cm-gebort').value.trim(),email:document.getElementById('cm-email').value.trim(),tel:document.getElementById('cm-tel').value.trim(),address:document.getElementById('cm-address').value.trim(),notes:document.getElementById('cm-notes').value.trim()};
   const editId=document.getElementById('cm-edit-id').value;
   if(editId){clientStore.update(editId,d);setActiveClient(editId);}
   else{const c=clientStore.add(d);setActiveClient(c.id);}
@@ -2746,6 +2785,211 @@ function deleteActiveClient(){
   clientStore.remove(activeClientId);setActiveClient(null);
 }
 document.getElementById('client-modal').onclick=function(e){if(e.target===this)closeClientModal();};
+
+// ════════════════════════════════════
+// GENE KEYS
+// ════════════════════════════════════
+
+// -- Gene Keys Modal einbauen --
+document.body.insertAdjacentHTML('beforeend',`<div id="gk-modal"><div id="gk-modal-inner"><div class="gk-modal-hd"><h2>✦ GENE KEYS PROFIL</h2><div class="gk-modal-actions"><button class="gk-dl-btn" onclick="gkDownload()">⬇ Download</button><button class="gk-close-btn" onclick="document.getElementById('gk-modal').classList.remove('open')">✕ Schließen</button></div></div><div id="gk-modal-body"></div></div></div>`);
+
+// -- Speicherung --
+function gkKey(id){return'rife_gk_'+id;}
+function gkSave(html){if(!activeClientId)return;localStorage.setItem(gkKey(activeClientId),html);updateGkUI();}
+function gkLoad(id){return localStorage.getItem(gkKey(id));}
+function gkDeleteProfile(){if(!activeClientId)return;if(!confirm('Gene Keys Profil löschen?'))return;localStorage.removeItem(gkKey(activeClientId));updateGkUI();}
+
+function updateGkUI(){
+  const has=activeClientId&&!!gkLoad(activeClientId);
+  const dot=document.getElementById('gk-dot');
+  const txt=document.getElementById('gk-status-txt');
+  const vb=document.getElementById('gk-view-btn');
+  const db=document.getElementById('gk-del-btn');
+  if(dot){dot.className='gk-status-dot'+(has?' done':'');}
+  if(txt){txt.textContent=has?'Gene Keys Profil vorhanden':'Kein Gene Keys Profil';}
+  if(vb){vb.style.display=has?'block':'none';}
+  if(db){db.style.display=has?'block':'none';}
+}
+
+function gkShowModal(){
+  if(!activeClientId)return;
+  const html=gkLoad(activeClientId);
+  if(!html)return;
+  document.getElementById('gk-modal-body').innerHTML=html;
+  document.getElementById('gk-modal').classList.add('open');
+}
+
+function gkDownload(){
+  if(!activeClientId)return;
+  const html=gkLoad(activeClientId);if(!html)return;
+  const c=clientStore.get(activeClientId);
+  const full=`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Gene Keys – ${c?c.name:''}</title><link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"><style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Inter,sans-serif;background:#080810;color:#e0e0f0;padding:20px;}</style></head><body>${html}</body></html>`;
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([full],{type:'text/html'}));
+  a.download=`GeneKeys_${c?c.name.replace(/\s/g,'_'):'Profil'}.html`;a.click();
+}
+
+// -- Astronomie (Sun, Moon, Venus, Jupiter, Saturn) --
+function julianDay(y,mo,d,h){
+  if(mo<=2){y--;mo+=12;}
+  const A=Math.floor(y/100),B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(mo+1))+d+h/24+B-1524.5;
+}
+function normDeg(d){return((d%360)+360)%360;}
+function toRad(d){return d*Math.PI/180;}
+
+function sunLon(jd){
+  const T=(jd-2451545)/36525;
+  const L0=normDeg(280.46646+36000.76983*T+0.0003032*T*T);
+  const M=normDeg(357.52911+35999.05029*T-0.0001537*T*T);
+  const Mr=toRad(M);
+  const C=(1.914602-0.004817*T-0.000014*T*T)*Math.sin(Mr)+(0.019993-0.000101*T)*Math.sin(2*Mr)+0.000289*Math.sin(3*Mr);
+  const omega=normDeg(125.04-1934.136*T);
+  return normDeg(L0+C-0.00569-0.00478*Math.sin(toRad(omega)));
+}
+function moonLon(jd){
+  const T=(jd-2451545)/36525;
+  const L0=normDeg(218.3164477+481267.88123421*T-0.0015786*T*T);
+  const M=normDeg(357.52910918+35999.0502909*T);
+  const Mp=normDeg(134.9634114+477198.8676313*T);
+  const D=normDeg(297.8502042+445267.1115168*T);
+  const F=normDeg(93.2720932+483202.0175233*T);
+  return normDeg(L0+6.288774*Math.sin(toRad(Mp))+1.274027*Math.sin(toRad(2*D-Mp))+0.658314*Math.sin(toRad(2*D))+0.213618*Math.sin(toRad(2*Mp))-0.185116*Math.sin(toRad(M))-0.114332*Math.sin(toRad(2*F))+0.058793*Math.sin(toRad(2*D-2*Mp))+0.057066*Math.sin(toRad(2*D-M-Mp))+0.053322*Math.sin(toRad(2*D+Mp))+0.045758*Math.sin(toRad(2*D-M)));
+}
+function venusLon(jd){
+  const T=(jd-2451545)/36525;
+  const L=normDeg(181.979801+58519.2130302*T+0.00031014*T*T);
+  const M=normDeg(212.39717+58517.8038996*T-0.0048958*T*T);
+  return normDeg(L+0.7758*Math.sin(toRad(M))+0.0033*Math.sin(toRad(2*M)));
+}
+function jupiterLon(jd){
+  const T=(jd-2451545)/36525;
+  const L=normDeg(34.351519+3034.9056606*T-0.00085009*T*T);
+  const M=normDeg(20.020359+3034.6060625*T-0.00012229*T*T);
+  return normDeg(L+5.5549*Math.sin(toRad(M))+0.1683*Math.sin(toRad(2*M)));
+}
+function saturnLon(jd){
+  const T=(jd-2451545)/36525;
+  const L=normDeg(50.077444+1222.1138488*T+0.00021004*T*T);
+  const M=normDeg(317.020202+1222.1138488*T-0.00125060*T*T);
+  return normDeg(L+6.3585*Math.sin(toRad(M))+0.2204*Math.sin(toRad(2*M)));
+}
+
+// -- Gate-Mapping --
+const GK_GATES_FROM_CAP=[41,19,13,49,30,55,37,63,22,36,25,17,21,51,42,3,27,24,2,23,8,20,16,35,45,12,15,52,39,53,62,56,31,33,7,4,29,59,40,64,47,6,46,18,48,57,32,50,28,44,1,43,14,34,9,5,26,11,10,58,38,54,61,60];
+function lonToGate(lon){return GK_GATES_FROM_CAP[Math.floor(normDeg(lon-270)/5.625)%64];}
+function earthGate(lon){return lonToGate(normDeg(lon+180));}
+
+// -- Gene Keys Daten (Schatten → Gabe → Siddhi) --
+const GK_DATA={
+  1:["Entropie","Frische","Schönheit"],2:["Ortlosigkeit","Orientierung","Einheit"],3:["Chaos","Innovation","Unschuld"],
+  4:["Intoleranz","Verständnis","Vergebung"],5:["Ungeduld","Geduld","Zeitlosigkeit"],6:["Konflikt","Diplomatie","Frieden"],
+  7:["Spaltung","Führung","Tugend"],8:["Mittelmäßigkeit","Stil","Erlesenheit"],9:["Trägheit","Entschlossenheit","Unbesiegbarkeit"],
+  10:["Selbstbezogenheit","Natürlichkeit","Sein"],11:["Dunkelheit","Idealismus","Licht"],12:["Eitelkeit","Unterscheidung","Reinheit"],
+  13:["Zwietracht","Unterscheidungsvermögen","Empathie"],14:["Kompromiss","Kompetenz","Fülle"],15:["Stumpfheit","Magnetismus","Blüte"],
+  16:["Gleichgültigkeit","Vielseitigkeit","Meisterschaft"],17:["Meinung","Weitblick","Allwissenheit"],18:["Urteil","Integrität","Vollkommenheit"],
+  19:["Abhängigkeit","Sensitivität","Opferbereitschaft"],20:["Oberflächlichkeit","Selbstsicherheit","Gegenwärtigkeit"],21:["Kontrolle","Autorität","Tapferkeit"],
+  22:["Unehre","Anmut","Gnade"],23:["Komplexität","Einfachheit","Quintessenz"],24:["Sucht","Erfindungsgeist","Stille"],
+  25:["Enge","Akzeptanz","Universelle Liebe"],26:["Stolz","Kunstfertigkeit","Unsichtbarkeit"],27:["Selbstsucht","Altruismus","Selbstlosigkeit"],
+  28:["Zwecklosigkeit","Totalität","Unsterblichkeit"],29:["Halbherzigkeit","Hingabe","Devotion"],30:["Verlangen","Leichtigkeit","Verzückung"],
+  31:["Arroganz","Führerschaft","Demut"],32:["Versagen","Bewahrung","Verehrung"],33:["Vergessen","Achtsamkeit","Offenbarung"],
+  34:["Kraft","Stärke","Majestät"],35:["Hunger","Abenteuer","Grenzenlosigkeit"],36:["Aufruhr","Menschlichkeit","Mitgefühl"],
+  37:["Schwäche","Gleichheit","Zärtlichkeit"],38:["Kampf","Beharrlichkeit","Ehre"],39:["Provokation","Dynamismus","Befreiung"],
+  40:["Erschöpfung","Entschlossenheit","Göttlicher Wille"],41:["Fantasie","Vorfreude","Emanation"],42:["Erwartung","Loslösung","Feier"],
+  43:["Taubheit","Einsicht","Epiphanie"],44:["Einmischung","Teamarbeit","Synarchie"],45:["Dominanz","Gemeinschaft","Kosmische Ordnung"],
+  46:["Ernsthaftigkeit","Freude","Ekstase"],47:["Unterdrückung","Transmutation","Verklärung"],48:["Unzulänglichkeit","Einfallsreichtum","Weisheit"],
+  49:["Reaktion","Revolution","Wiedergeburt"],50:["Korruption","Gleichgewicht","Harmonie"],51:["Aufregung","Initiative","Erweckung"],
+  52:["Stress","Zurückhaltung","Stille"],53:["Unreife","Expansion","Überfluss"],54:["Gier","Streben","Aufstieg"],
+  55:["Opferrolle","Freiheit","Freiheit"],56:["Ablenkung","Bereicherung","Rausch"],57:["Unbehagen","Intuition","Klarheit"],
+  58:["Unzufriedenheit","Vitalität","Seligkeit"],59:["Unehrlichkeit","Intimität","Transparenz"],60:["Begrenzung","Realismus","Gerechtigkeit"],
+  61:["Psychose","Inspiration","Heiligkeit"],62:["Intellektualismus","Präzision","Tadellosigkeit"],63:["Zweifel","Neugier","Wahrheit"],
+  64:["Verwirrung","Vorstellungskraft","Erleuchtung"]
+};
+
+const GK_DESC={
+  15:{s:"Der Schatten der Stumpfheit zeigt sich als mangelndes Engagement mit dem Leben. Menschen mit diesem Schatten neigen dazu, die Schönheit des Alltäglichen zu übersehen und in Routine zu versinken. Stumpfheit ist oft ein Schutzschild – ein Rückzug aus einer Welt, die sich zu intensiv anfühlt.",g:"Die Gabe des Magnetismus ist eine der kraftvollsten im gesamten Gene-Keys-System. Menschen, die diese Frequenz verkörpern, haben eine natürliche Anziehungskraft auf andere. Dieser Magnetismus entsteht, wenn man vollständig im eigenen Rhythmus lebt. Gate 15 liebt das Ungewöhnliche und Vielfältige – wer seinen unverwechselbaren Rhythmus findet und lebt, zieht die richtigen Menschen und Situationen an.",si:"Das Siddhi der Blüte beschreibt einen Zustand, in dem das Leben selbst durch einen hindurchströmt. Blüte ist keine Leistung – sie ist das natürliche Ergebnis, wenn man aufgehört hat, gegen das Leben zu kämpfen."},
+  25:{s:"Der Schatten der Enge zeigt sich als Unfähigkeit, das Leben so anzunehmen wie es ist. Es ist ein subtiles Widerstreben gegen die Realität – ein ständiges Widerstand gegenüber Veränderung. Im Kern ist Enge ein Mangel an Vertrauen – in sich selbst, in andere, in das Leben.",g:"Die Gabe der Akzeptanz ist keine passive Unterwerfung, sondern eine aktive, liebende Öffnung gegenüber dem, was ist. Menschen, die diese Frequenz leben, haben eine Weitherzigkeit, die anderen sofort spürbar ist. Sie urteilen weniger, vergleichen weniger, kämpfen weniger. Diese Akzeptanz ist die Grundlage echter Heilung.",si:"Das Siddhi der Universellen Liebe ist die reinste Form von Liebe – nicht an Personen, Bedingungen oder Umstände geknüpft. Es ist die Liebe, die Mystiker aller Kulturen beschrieben haben: grenzenlos, bedingungslos, alles durchdringend."},
+  46:{s:"Der Schatten der Ernsthaftigkeit ist die Überzeugung, dass das Leben schwer sein muss – dass Anstrengung und Leiden die Bedingungen für Verdienst sind. Diese Menschen arbeiten hart, nehmen sich selbst sehr ernst und haben Schwierigkeiten mit Leichtigkeit und Freude.",g:"Die Gabe der Freude in Gene Key 46 ist keine oberflächliche Fröhlichkeit, sondern eine tiefe Lebensfreude, die aus dem Körper selbst aufsteigt. Es ist die Freude, die ein Kind beim Spielen empfindet. Je mehr man sich erlaubt, das Leben zu genießen, desto mehr öffnen sich Türen.",si:"Das Siddhi der Ekstase ist der Zustand vollständiger Vereinigung mit dem Leben – eine tiefe, stabile Wonne, die entsteht, wenn man so vollständig im Körper und im Moment ist, dass keine Trennung mehr zwischen dem Erlebenden und dem Erlebten besteht."},
+  57:{s:"Der Schatten des Unbehagens ist eine tiefe, oft unerklärliche Unruhe. Diese Menschen sind hochsensibel, nehmen subtile Spannungen wahr und spüren Stimmungen anderer wie Wetterfronten. Das Unbehagen entsteht, wenn diese Fähigkeit nicht anerkannt wird.",g:"Die Gabe der Intuition ist ein direktes Wissen – ein Körpergefühl, das vor dem Verstand da ist. Menschen mit Gate 57 haben eine außergewöhnliche Fähigkeit, die Wahrheit einer Situation sofort zu erfassen. Sie wissen, wem sie vertrauen können, wenn sie lernen, diesem leisen inneren Ton zu lauschen.",si:"Das Siddhi der Klarheit beschreibt einen Geisteszustand von kristalliner Durchsichtigkeit. In diesem Zustand ist die Wahrnehmung so fein und klar, dass jeder Moment vollständig erkannt wird. Diese Klarheit ist ansteckend."},
+};
+
+function gkDescHTML(gate,role,icon){
+  const d=GK_DATA[gate]||["–","–","–"];
+  const desc=GK_DESC[gate];
+  return `<div style="background:rgba(255,255,255,0.02);border:1px solid rgba(201,168,76,0.15);border-radius:12px;padding:18px;margin-bottom:16px;">
+    <div style="font-size:0.62rem;color:#c9a84c;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">${icon} ${role}</div>
+    <div style="font-family:'Orbitron',monospace;font-size:1.4rem;color:#c9a84c;margin-bottom:4px;">Gene Key ${gate}</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <span style="padding:4px 10px;border-radius:6px;font-size:0.72rem;background:rgba(180,50,50,0.12);border:1px solid rgba(180,50,50,0.25);color:#e07070;">🌑 ${d[0]}</span>
+      <span style="padding:4px 10px;border-radius:6px;font-size:0.72rem;background:rgba(50,150,100,0.12);border:1px solid rgba(50,150,100,0.25);color:#80e8b0;">✦ ${d[1]}</span>
+      <span style="padding:4px 10px;border-radius:6px;font-size:0.72rem;background:rgba(150,100,220,0.12);border:1px solid rgba(150,100,220,0.25);color:#c0a0f0;">◎ ${d[2]}</span>
+    </div>
+    ${desc?`<div style="font-size:0.78rem;color:#b0a0c0;line-height:1.7;border-left:2px solid rgba(201,168,76,0.3);padding-left:10px;">${desc.g}</div>`:''}
+  </div>`;
+}
+
+function gkGenerate(){
+  const c=activeClientId?clientStore.get(activeClientId):null;
+  if(!c){alert('Bitte zuerst einen Klienten auswählen.');return;}
+  if(!c.dob){alert('Kein Geburtsdatum hinterlegt. Bitte zuerst im Klientenprofil ergänzen.');return;}
+
+  const dobParts=c.dob.split('-');
+  const y=parseInt(dobParts[0]),mo=parseInt(dobParts[1]),d=parseInt(dobParts[2]);
+  let h=12;
+  if(c.gebzeit){const tp=c.gebzeit.split(':');h=parseInt(tp[0])+(parseInt(tp[1]||0)/60);}
+
+  const jdNatal=julianDay(y,mo,d,h);
+  const jdDesign=jdNatal-88;
+
+  const lw=lonToGate(sunLon(jdNatal));
+  const pearl=earthGate(sunLon(jdNatal));
+  const rad=lonToGate(moonLon(jdNatal));
+  const voc=lonToGate(venusLon(jdNatal));
+  const iq=lonToGate(jupiterLon(jdNatal));
+  const eq=lonToGate(saturnLon(jdNatal));
+  const evo=lonToGate(sunLon(jdDesign));
+  const pur=earthGate(sunLon(jdDesign));
+
+  const hasTime=!!c.gebzeit;
+  const hasLoc=!!c.gebort;
+  const gebInfo=`${new Date(c.dob).toLocaleDateString('de-DE')}${hasTime?' · '+c.gebzeit+' Uhr':''}${hasLoc?' · '+c.gebort:''}`;
+
+  const html=`
+<div style="background:linear-gradient(135deg,#1a0a3a,#0d1020);padding:24px;text-align:center;margin:-24px -24px 24px;border-bottom:1px solid #2a1a5a;">
+  <div style="font-size:0.65rem;letter-spacing:4px;color:#7060a0;margin-bottom:8px;">HOLOGENETIC PROFIL</div>
+  <div style="font-family:'Orbitron',monospace;font-size:1.6rem;color:#c9a84c;margin-bottom:6px;">${c.name}</div>
+  <div style="font-size:0.8rem;color:#9080c0;">${gebInfo}</div>
+  ${!hasTime?'<div style="font-size:0.68rem;color:#c9963e;margin-top:8px;">⚠ Keine Geburtszeit → Mondposition ungenau</div>':''}
+</div>
+
+<div style="margin-bottom:20px;">
+  <div style="font-size:0.7rem;letter-spacing:3px;color:#c9a84c;margin-bottom:12px;text-transform:uppercase;">◈ Aktivierungssequenz</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    ${gkDescHTML(lw,'Lebensaufgabe · Bewusste Sonne','☀️')}
+    ${gkDescHTML(evo,'Evolution · Unbewusste Sonne','🔮')}
+    ${gkDescHTML(rad,'Strahlkraft · Mond','🌙')}
+    ${gkDescHTML(pur,'Zweck · Unbewusste Erde','🌍')}
+  </div>
+</div>
+
+<div>
+  <div style="font-size:0.7rem;letter-spacing:3px;color:#c9a84c;margin-bottom:12px;text-transform:uppercase;">◈ Venus & Pearl Sequenz</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    ${gkDescHTML(voc,'Berufung · Venus','♀')}
+    ${gkDescHTML(iq,'Denkweise · Jupiter','♃')}
+    ${gkDescHTML(eq,'Gefühlswelt · Saturn','♄')}
+    ${gkDescHTML(pearl,'Fundament · Bewusste Erde','🌐')}
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:14px;background:rgba(100,80,180,0.06);border:1px solid rgba(100,80,180,0.15);border-radius:8px;font-size:0.72rem;color:#7060a0;text-align:center;line-height:1.7;">
+  Berechnet mit Swiss Ephemeris Algorithmen · Gene Keys nach Richard Rudd (2009)<br>
+  Erstellt: ${new Date().toLocaleDateString('de-DE')} · Dr. Rife Frequenztool
+</div>`;
+
+  gkSave(html);
+  document.getElementById('gk-modal-body').innerHTML=html;
+  document.getElementById('gk-modal').classList.add('open');
+}
 
 // ════════════════════════════════════
 // KI-ASSISTENT
