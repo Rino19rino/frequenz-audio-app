@@ -2941,9 +2941,18 @@ Format: [{"de":"Exakter Name aus Liste","reason":"Genetische Begründung max 12 
       card.querySelector('.card-goto-btn').onclick=(e)=>{
         e.stopPropagation();
         document.getElementById('search').value='';filterList();
-        const feEl=document.getElementById('fe-'+eIdx);
-        if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
         document.getElementById('ai-panel').classList.remove('open');
+        setTimeout(()=>{
+          const feEl=document.getElementById('fe-'+eIdx);
+          if(feEl){
+            const sparte=feEl.closest('.sparte');
+            if(sparte){sparte.classList.add('open');}
+            feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';
+            feEl.scrollIntoView({behavior:'smooth',block:'center'});
+            feEl.style.outline='2px solid var(--primary)';
+            setTimeout(()=>{feEl.style.outline='';},2000);
+          }
+        },80);
       };
       resultEl.appendChild(card);
     });
@@ -3087,9 +3096,18 @@ Beispiel: ["Hüftgelenk","Arthrose","Gelenkschmerz","Entzündung","Knorpel","Hü
       card.querySelector('.card-goto-btn').onclick=(e)=>{
         e.stopPropagation();
         document.getElementById('search').value='';filterList();
-        const feEl=document.getElementById('fe-'+eIdx);
-        if(feEl){feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';feEl.scrollIntoView({behavior:'smooth',block:'start'});}
         document.getElementById('ai-panel').classList.remove('open');
+        setTimeout(()=>{
+          const feEl=document.getElementById('fe-'+eIdx);
+          if(feEl){
+            const sparte=feEl.closest('.sparte');
+            if(sparte){sparte.classList.add('open');}
+            feEl.classList.add('open');feEl.querySelector('.fe-toggle').textContent='▲';
+            feEl.scrollIntoView({behavior:'smooth',block:'center'});
+            feEl.style.outline='2px solid var(--primary)';
+            setTimeout(()=>{feEl.style.outline='';},2000);
+          }
+        },80);
       };
       resultEl.appendChild(card);
     });
